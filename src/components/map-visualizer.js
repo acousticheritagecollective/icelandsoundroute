@@ -47,6 +47,27 @@ export class MapVisualizer {
     this.svg.setAttribute('viewBox', `0 0 ${this.projection.width} ${this.projection.height}`);
     this.svg.style.backgroundColor = '#1a1a1a';
     
+    // Add Iceland outline/background shape
+    const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    background.setAttribute('width', this.projection.width);
+    background.setAttribute('height', this.projection.height);
+    background.setAttribute('fill', '#0a0a0a');
+    background.setAttribute('stroke', '#333');
+    background.setAttribute('stroke-width', '2');
+    this.svg.appendChild(background);
+    
+    // Add grid lines for reference
+    for (let i = 1; i < 4; i++) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', (this.projection.width / 4) * i);
+      line.setAttribute('y1', 0);
+      line.setAttribute('x2', (this.projection.width / 4) * i);
+      line.setAttribute('y2', this.projection.height);
+      line.setAttribute('stroke', '#222');
+      line.setAttribute('stroke-width', '1');
+      this.svg.appendChild(line);
+    }
+    
     this.container.appendChild(this.svg);
     
     console.log('Map visualizer initialized');

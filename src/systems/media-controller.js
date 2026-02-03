@@ -213,12 +213,20 @@ export class MediaController {
   }
   
   /**
-   * Get current context from route mapping
+   * Set state manager reference for context access
+   */
+  setStateManager(stateManager) {
+    this.stateManager = stateManager;
+  }
+  
+  /**
+   * Get current context from state manager
    * Used to detect section changes
    */
   getCurrentContext() {
-    // This would normally come from timeline position
-    // For now, return null (will be wired up in state manager)
+    if (this.stateManager && this.stateManager.currentContext) {
+      return this.stateManager.currentContext;
+    }
     return null;
   }
   

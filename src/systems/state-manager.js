@@ -69,6 +69,9 @@ export class StateManager {
       console.log('4. Initializing media controller...');
       this.mediaController = new MediaController(this.routeMapping);
       
+      // Give media controller access to state manager for context
+      this.mediaController.setStateManager(this);
+      
       // 5. Wire up timeline updates
       console.log('5. Wiring systems together...');
       this.timelineEngine.subscribe((timelineData) => {
@@ -172,6 +175,16 @@ export class StateManager {
     
     // Update audio engine
     this.audioEngine.update(timelineData);
+    
+    // Update now playing display
+    const sectionEl = document.getElementById('current-section');
+    const trackEl = document.getElementById('current-track');
+    if (sectionEl && trackEl) {
+      sectionEl.textContent = context.section.name;
+      const trackNumber = context.audio.file.index + 1;
+      const sectionNumber = context.section.index + 1;
+      trackEl.textContent = `Section ${sectionNumber} • Track ${trackNumber} of 8`;
+    }
     
     // Check for section change
     if (context.section.id !== this.lastSectionId) {
