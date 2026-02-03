@@ -2,8 +2,6 @@
  * ROUTE CONFIGURATION
  * Iceland Sound Route - Acoustic Heritage Collective
  * 
- * This file contains ALL route, audio, and media data.
- * 
  * IMPORTANT: All paths are relative to: https://acousticheritagecollective.org/iceland/
  */
 
@@ -27,14 +25,14 @@ export const routeConfig = {
       ],
       
       audioFiles: [
-        { url: '/iceland/public/audio/section1/track_01.mp3', duration: 198 },  // 00:03:18
-        { url: '/iceland/public/audio/section1/track_02.mp3', duration: 353 },  // 00:05:53
-        { url: '/iceland/public/audio/section1/track_03.mp3', duration: 287 },  // 00:04:47
-        { url: '/iceland/public/audio/section1/track_04.mp3', duration: 324 },  // 00:05:24
-        { url: '/iceland/public/audio/section1/track_05.mp3', duration: 364 },  // 00:06:04
-        { url: '/iceland/public/audio/section1/track_06.mp3', duration: 496 },  // 00:08:16
-        { url: '/iceland/public/audio/section1/track_07.mp3', duration: 516 },  // 00:08:36
-        { url: '/iceland/public/audio/section1/track_08.mp3', duration: 476 }   // 00:07:56
+        { url: '/iceland/public/audio/section1/track_01.mp3', duration: 198 },
+        { url: '/iceland/public/audio/section1/track_02.mp3', duration: 353 },
+        { url: '/iceland/public/audio/section1/track_03.mp3', duration: 287 },
+        { url: '/iceland/public/audio/section1/track_04.mp3', duration: 324 },
+        { url: '/iceland/public/audio/section1/track_05.mp3', duration: 364 },
+        { url: '/iceland/public/audio/section1/track_06.mp3', duration: 496 },
+        { url: '/iceland/public/audio/section1/track_07.mp3', duration: 516 },
+        { url: '/iceland/public/audio/section1/track_08.mp3', duration: 476 }
       ],
       
       mediaPool: {
@@ -82,14 +80,14 @@ export const routeConfig = {
       ],
       
       audioFiles: [
-        { url: '/iceland/public/audio/section2/track_01.mp3', duration: 198 },
-        { url: '/iceland/public/audio/section2/track_02.mp3', duration: 353 },
-        { url: '/iceland/public/audio/section2/track_03.mp3', duration: 287 },
-        { url: '/iceland/public/audio/section2/track_04.mp3', duration: 324 },
-        { url: '/iceland/public/audio/section2/track_05.mp3', duration: 364 },
-        { url: '/iceland/public/audio/section2/track_06.mp3', duration: 496 },
-        { url: '/iceland/public/audio/section2/track_07.mp3', duration: 516 },
-        { url: '/iceland/public/audio/section2/track_08.mp3', duration: 476 }
+        { url: '/iceland/public/audio/section2/track_09.mp3', duration: 198 },
+        { url: '/iceland/public/audio/section2/track_10.mp3', duration: 353 },
+        { url: '/iceland/public/audio/section2/track_11.mp3', duration: 287 },
+        { url: '/iceland/public/audio/section2/track_12.mp3', duration: 324 },
+        { url: '/iceland/public/audio/section2/track_13.mp3', duration: 364 },
+        { url: '/iceland/public/audio/section2/track_14.mp3', duration: 496 },
+        { url: '/iceland/public/audio/section2/track_15.mp3', duration: 516 },
+        { url: '/iceland/public/audio/section2/track_16.mp3', duration: 476 }
       ],
       
       mediaPool: {
@@ -137,14 +135,14 @@ export const routeConfig = {
       ],
       
       audioFiles: [
-        { url: '/iceland/public/audio/section3/track_01.mp3', duration: 198 },
-        { url: '/iceland/public/audio/section3/track_02.mp3', duration: 353 },
-        { url: '/iceland/public/audio/section3/track_03.mp3', duration: 287 },
-        { url: '/iceland/public/audio/section3/track_04.mp3', duration: 324 },
-        { url: '/iceland/public/audio/section3/track_05.mp3', duration: 364 },
-        { url: '/iceland/public/audio/section3/track_06.mp3', duration: 496 },
-        { url: '/iceland/public/audio/section3/track_07.mp3', duration: 516 },
-        { url: '/iceland/public/audio/section3/track_08.mp3', duration: 476 }
+        { url: '/iceland/public/audio/section3/track_17.mp3', duration: 198 },
+        { url: '/iceland/public/audio/section3/track_18.mp3', duration: 353 },
+        { url: '/iceland/public/audio/section3/track_19.mp3', duration: 287 },
+        { url: '/iceland/public/audio/section3/track_20.mp3', duration: 324 },
+        { url: '/iceland/public/audio/section3/track_21.mp3', duration: 364 },
+        { url: '/iceland/public/audio/section3/track_22.mp3', duration: 496 },
+        { url: '/iceland/public/audio/section3/track_23.mp3', duration: 516 },
+        { url: '/iceland/public/audio/section3/track_24.mp3', duration: 476 }
       ],
       
       mediaPool: {
@@ -192,14 +190,14 @@ export const routeConfig = {
       ],
       
       audioFiles: [
-        { url: '/iceland/public/audio/section4/track_01.mp3', duration: 198 },
-        { url: '/iceland/public/audio/section4/track_02.mp3', duration: 353 },
-        { url: '/iceland/public/audio/section4/track_03.mp3', duration: 287 },
-        { url: '/iceland/public/audio/section4/track_04.mp3', duration: 324 },
-        { url: '/iceland/public/audio/section4/track_05.mp3', duration: 364 },
-        { url: '/iceland/public/audio/section4/track_06.mp3', duration: 496 },
-        { url: '/iceland/public/audio/section4/track_07.mp3', duration: 516 },
-        { url: '/iceland/public/audio/section4/track_08.mp3', duration: 476 }
+        { url: '/iceland/public/audio/section4/track_25.mp3', duration: 198 },
+        { url: '/iceland/public/audio/section4/track_26.mp3', duration: 353 },
+        { url: '/iceland/public/audio/section4/track_27.mp3', duration: 287 },
+        { url: '/iceland/public/audio/section4/track_28.mp3', duration: 324 },
+        { url: '/iceland/public/audio/section4/track_29.mp3', duration: 364 },
+        { url: '/iceland/public/audio/section4/track_30.mp3', duration: 496 },
+        { url: '/iceland/public/audio/section4/track_31.mp3', duration: 516 },
+        { url: '/iceland/public/audio/section4/track_32.mp3', duration: 476 }
       ],
       
       mediaPool: {

@@ -179,11 +179,40 @@ export class StateManager {
     // Update now playing display
     const sectionEl = document.getElementById('current-section');
     const trackEl = document.getElementById('current-track');
+    const nextTrackEl = document.getElementById('next-track');
+    
     if (sectionEl && trackEl) {
-      sectionEl.textContent = context.section.name;
+      // Current section name
+      sectionEl.textContent = `Now Playing: ${context.section.name}`;
+      
+      // Current track info
       const trackNumber = context.audio.file.index + 1;
       const sectionNumber = context.section.index + 1;
-      trackEl.textContent = `Section ${sectionNumber} • Track ${trackNumber} of 8`;
+      const fileName = context.audio.file.url.split('/').pop().replace('.mp3', '');
+      trackEl.textContent = `Track ${trackNumber} of 8 • ${fileName}`;
+      
+      // Next track info
+      if (nextTrackEl) {
+        const nextTrackIndex = context.audio.file.index + 1;
+        const totalTracksInSection = 8;
+        
+        if (nextTrackIndex < totalTracksInSection) {
+          // Next track in same section
+          const section = this.routeMapping.getSectionByIndex(context.section.index);
+          const nextFile = section.audioFiles[nextTrackIndex];
+          const nextFileName = nextFile.url.split('/').pop().replace('.mp3', '');
+          nextTrackEl.textContent = `Next: ${nextFileName}`;
+        } else {
+          // Next section
+          const nextSectionIndex = context.section.index + 1;
+          if (nextSectionIndex < 4) {
+            const nextSection = this.routeMapping.getSectionByIndex(nextSectionIndex);
+            nextTrackEl.textContent = `Next: ${nextSection.name}`;
+          } else {
+            nextTrackEl.textContent = `Next: Back to start`;
+          }
+        }
+      }
     }
     
     // Check for section change

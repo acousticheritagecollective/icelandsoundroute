@@ -1,76 +1,60 @@
 /**
  * MAP VISUALIZER COMPONENT
  * 
- * Displays Iceland map with route path and current position indicator.
+ * Displays OpenStreetMap with route path and current position indicator.
  * Updates in real-time as audio plays through the timeline.
  * 
- * FEATURES:
- * - SVG-based map rendering
- * - Route path visualization (all 4 sections)
- * - Current position indicator (animated dot)
- * - Section highlighting
- * - Responsive sizing
+ * Uses Leaflet.js for map rendering with OpenStreetMap tiles.
  */
 
 export class MapVisualizer {
   constructor(container) {
     this.container = container;
-    this.svg = null;
-    this.routePath = null;
+    this.map = null;
+    this.routeLayers = [];
     this.positionMarker = null;
-    this.sectionPaths = [];
-    
-    // Map projection settings
-    this.projection = {
-      // Iceland bounds (approximate)
-      minLat: 63.3,
-      maxLat: 66.5,
-      minLng: -24.5,
-      maxLng: -13.5,
-      width: 800,
-      height: 600
-    };
-    
     this.currentContext = null;
+    this.pendingRouteData = null; // Store route data if map not ready
     
     this.initialize();
   }
   
   /**
-   * Initialize SVG and map elements
+   * Initialize Leaflet map
    */
   initialize() {
-    // Create SVG
-    this.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    this.svg.setAttribute('width', '100%');
-    this.svg.setAttribute('height', '100%');
-    this.svg.setAttribute('viewBox', `0 0 ${this.projection.width} ${this.projection.height}`);
-    this.svg.style.backgroundColor = '#1a1a1a';
-    
-    // Add Iceland outline/background shape
-    const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    background.setAttribute('width', this.projection.width);
-    background.setAttribute('height', this.projection.height);
-    background.setAttribute('fill', '#0a0a0a');
-    background.setAttribute('stroke', '#333');
-    background.setAttribute('stroke-width', '2');
-    this.svg.appendChild(background);
-    
-    // Add grid lines for reference
-    for (let i = 1; i < 4; i++) {
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', (this.projection.width / 4) * i);
-      line.setAttribute('y1', 0);
-      line.setAttribute('x2', (this.projection.width / 4) * i);
-      line.setAttribute('y2', this.projection.height);
-      line.setAttribute('stroke', '#222');
-      line.setAttribute('stroke-width', '1');
-      this.svg.appendChild(line);
-    }
-    
-    this.container.appendChild(this.svg);
-    
-    console.log('Map visualizer initialized');
+    // Wait a moment for DOM to be fully ready
+    setTimeout(() => {
+      try {
+        // Create Leaflet map centered on Iceland
+        this.map = L.map(this.container, {
+          zoomControl: true,
+          attributionControl: true
+        }).setView([64.9631, -19.0208], 6); // Iceland center
+        
+        // Add OpenStreetMap tiles with dark theme
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          opacity: 1
+        }).addTo(this.map);
+        
+        // Force map to recalculate size
+        setTimeout(() => {
+          this.map.invalidateSize();
+        }, 100);
+        
+        console.log('Map visualizer initialized with OpenStreetMap');
+        
+        // If route data was already provided, load it now
+        if (this.pendingRouteData) {
+          this.loadRoute(this.pendingRouteData);
+          this.pendingRouteData = null;
+        }
+        
+      } catch (error) {
+        console.error('Error initializing map:', error);
+      }
+    }, 100);
   }
   
   /**
@@ -79,148 +63,75 @@ export class MapVisualizer {
    * @param {Array} sections - Array of section objects from route mapping
    */
   loadRoute(sections) {
-    console.log('Loading route with', sections.length, 'sections');
-    
-    // Create path for each section
-    sections.forEach((section, index) => {
-      const pathElement = this.createSectionPath(section, index);
-      this.sectionPaths.push({
-        section,
-        element: pathElement
-      });
-      this.svg.appendChild(pathElement);
-    });
-    
-    // Create position marker
-    this.positionMarker = this.createPositionMarker();
-    this.svg.appendChild(this.positionMarker);
-  }
-  
-  /**
-   * Create SVG path for a section
-   */
-  createSectionPath(section, index) {
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    
-    // Convert geo coordinates to SVG coordinates
-    const pathData = this.geoPathToSVGPath(section.geoPath);
-    path.setAttribute('d', pathData);
-    
-    // Styling
-    const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24']; // Different color per section
-    path.setAttribute('stroke', colors[index % colors.length]);
-    path.setAttribute('stroke-width', '3');
-    path.setAttribute('fill', 'none');
-    path.setAttribute('stroke-linecap', 'round');
-    path.setAttribute('stroke-linejoin', 'round');
-    path.setAttribute('opacity', '0.3'); // Dim by default
-    path.setAttribute('data-section-id', section.id);
-    
-    return path;
-  }
-  
-  /**
-   * Convert geographic path to SVG path data
-   */
-  geoPathToSVGPath(geoPath) {
-    const points = geoPath.map(([lat, lng]) => this.projectToSVG(lat, lng));
-    
-    // Create SVG path data (M = move to, L = line to)
-    let pathData = `M ${points[0].x} ${points[0].y}`;
-    for (let i = 1; i < points.length; i++) {
-      pathData += ` L ${points[i].x} ${points[i].y}`;
+    // If map isn't ready yet, store data for later
+    if (!this.map) {
+      console.log('Map not ready, storing route data for later');
+      this.pendingRouteData = sections;
+      return;
     }
     
-    return pathData;
-  }
-  
-  /**
-   * Project lat/lng to SVG coordinates
-   * Simple linear projection (good enough for Iceland's size)
-   */
-  projectToSVG(lat, lng) {
-    const x = ((lng - this.projection.minLng) / (this.projection.maxLng - this.projection.minLng)) 
-              * this.projection.width;
+    console.log('Loading route with', sections.length, 'sections');
     
-    // Flip Y axis (SVG Y increases downward, but latitude increases upward)
-    const y = ((this.projection.maxLat - lat) / (this.projection.maxLat - this.projection.minLat)) 
-              * this.projection.height;
+    const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24'];
     
-    return { x, y };
-  }
-  
-  /**
-   * Create position marker (animated dot)
-   */
-  createPositionMarker() {
-    const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    
-    // Outer glow circle
-    const glow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    glow.setAttribute('r', '12');
-    glow.setAttribute('fill', '#ffffff');
-    glow.setAttribute('opacity', '0.3');
-    group.appendChild(glow);
-    
-    // Main dot
-    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    dot.setAttribute('r', '6');
-    dot.setAttribute('fill', '#ffffff');
-    group.appendChild(dot);
-    
-    // Pulse animation (CSS would be better, but this works)
-    setInterval(() => {
-      glow.setAttribute('r', '12');
-      glow.setAttribute('opacity', '0.3');
+    // Create polyline for each section
+    sections.forEach((section, index) => {
+      const latLngs = section.geoPath.map(([lat, lng]) => [lat, lng]);
       
-      // Animate to larger size
-      const startTime = performance.now();
-      const duration = 1500;
+      const polyline = L.polyline(latLngs, {
+        color: colors[index % colors.length],
+        weight: 4,
+        opacity: 0.6,
+        smoothFactor: 1
+      }).addTo(this.map);
       
-      const animate = (currentTime) => {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        
-        const radius = 12 + (8 * progress);
-        const opacity = 0.3 * (1 - progress);
-        
-        glow.setAttribute('r', radius.toString());
-        glow.setAttribute('opacity', opacity.toString());
-        
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-        }
-      };
-      
-      requestAnimationFrame(animate);
-    }, 1500);
+      this.routeLayers.push({
+        section,
+        layer: polyline
+      });
+    });
     
-    return group;
+    // Create position marker (pulsing circle)
+    this.positionMarker = L.circleMarker([64.1466, -21.9426], {
+      radius: 8,
+      fillColor: '#ffffff',
+      color: '#ffffff',
+      weight: 2,
+      opacity: 1,
+      fillOpacity: 0.8
+    }).addTo(this.map);
+    
+    // Fit map to show all routes
+    const allLatLngs = sections.flatMap(s => s.geoPath.map(([lat, lng]) => [lat, lng]));
+    const bounds = L.latLngBounds(allLatLngs);
+    this.map.fitBounds(bounds, { padding: [20, 20] });
   }
   
   /**
    * Update visualization based on current context
-   * Called on each timeline update
    * 
    * @param {object} context - Context from route mapping
    */
   update(context) {
-    if (!context) return;
+    if (!context || !this.map || !this.positionMarker) return;
     
     this.currentContext = context;
     
     // Update position marker
-    const svgPos = this.projectToSVG(context.geo.latitude, context.geo.longitude);
-    this.positionMarker.setAttribute('transform', `translate(${svgPos.x}, ${svgPos.y})`);
+    this.positionMarker.setLatLng([context.geo.latitude, context.geo.longitude]);
     
     // Highlight current section
-    this.sectionPaths.forEach(({ section, element }) => {
+    this.routeLayers.forEach(({ section, layer }) => {
       if (section.id === context.section.id) {
-        element.setAttribute('opacity', '1.0'); // Full opacity for active section
-        element.setAttribute('stroke-width', '4');
+        layer.setStyle({
+          opacity: 1.0,
+          weight: 6
+        });
       } else {
-        element.setAttribute('opacity', '0.3'); // Dim for inactive sections
-        element.setAttribute('stroke-width', '3');
+        layer.setStyle({
+          opacity: 0.4,
+          weight: 4
+        });
       }
     });
   }
@@ -231,7 +142,7 @@ export class MapVisualizer {
   getState() {
     return {
       currentContext: this.currentContext,
-      sectionsLoaded: this.sectionPaths.length
+      sectionsLoaded: this.routeLayers.length
     };
   }
   
@@ -239,6 +150,8 @@ export class MapVisualizer {
    * Clean up
    */
   destroy() {
-    this.container.innerHTML = '';
+    if (this.map) {
+      this.map.remove();
+    }
   }
 }

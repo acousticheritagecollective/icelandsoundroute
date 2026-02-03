@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Iceland Radio Installation - A continuous audio-visual journey">
   <title>Iceland Radio Installation</title>
+  
+  <!-- Leaflet CSS for OpenStreetMap -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  
   <style>
     * {
       margin: 0;
@@ -40,19 +44,26 @@
       background: #000;
     }
     
-    /* Map overlay (bottom right) */
+    /* Map overlay (bottom right, above now playing bar) */
     #map-container {
       position: fixed;
-      bottom: 2rem;
+      bottom: 6rem;
       right: 2rem;
       width: 400px;
       height: 300px;
       z-index: 10;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.9);
       border-radius: 12px;
-      padding: 1rem;
+      overflow: hidden;
       backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    /* Leaflet map fills container */
+    #map-container .leaflet-container {
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
     }
     
     /* UI container (for overlays) */
@@ -81,31 +92,45 @@
       }
     }
     
-    /* Info overlay (top left) - optional */
+    /* Info overlay - Now Playing Bar at Bottom */
     #info-overlay {
       position: fixed;
-      top: 2rem;
-      left: 2rem;
+      bottom: 0;
+      left: 0;
+      right: 0;
       z-index: 10;
-      background: rgba(0, 0, 0, 0.8);
-      padding: 1rem 1.5rem;
-      border-radius: 8px;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      display: none; /* Hidden by default, can be toggled */
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.7));
+      padding: 1.5rem 2rem;
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     
     #info-overlay h2 {
-      font-size: 1rem;
+      font-size: 1.2rem;
       font-weight: 500;
-      margin-bottom: 0.5rem;
+      margin: 0;
       opacity: 0.9;
+      color: #fff;
     }
     
     #info-overlay p {
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       opacity: 0.7;
-      line-height: 1.4;
+      margin: 0.25rem 0 0 0;
+      color: #aaa;
+    }
+    
+    .now-playing-left {
+      flex: 1;
+    }
+    
+    .now-playing-right {
+      text-align: right;
+      opacity: 0.6;
+      font-size: 0.85rem;
     }
     
     /* Loading states */
@@ -136,15 +161,23 @@
     <!-- Map visualization -->
     <div id="map-container" role="img" aria-label="Route map of Iceland journey"></div>
     
-    <!-- Info overlay - Now Playing -->
-    <div id="info-overlay" style="display: block;">
-      <h2 id="current-section">Iceland Sound Route</h2>
-      <p id="current-track">Loading...</p>
+    <!-- Now Playing Bar - Bottom -->
+    <div id="info-overlay">
+      <div class="now-playing-left">
+        <h2 id="current-section">Iceland Sound Route</h2>
+        <p id="current-track">Loading...</p>
+      </div>
+      <div class="now-playing-right" id="next-track">
+        
+      </div>
     </div>
     
     <!-- UI overlays (tune-in button, loading, errors) -->
     <div id="ui-container"></div>
   </div>
+  
+  <!-- Leaflet JS for OpenStreetMap -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   
   <!-- Main application script (ES6 modules) -->
   <script type="module" src="./src/main.js"></script>
