@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Iceland Radio Installation - A continuous audio-visual journey">
+  <title>Iceland Radio Installation</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background: #000;
+      color: #fff;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+    
+    /* Main layout */
+    #app {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Media display (full screen background) */
+    #media-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      background: #000;
+    }
+    
+    /* Map overlay (bottom right) */
+    #map-container {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 400px;
+      height: 300px;
+      z-index: 10;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 12px;
+      padding: 1rem;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* UI container (for overlays) */
+    #ui-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 100;
+      pointer-events: none;
+    }
+    
+    #ui-container > * {
+      pointer-events: auto;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      #map-container {
+        width: calc(100% - 2rem);
+        height: 200px;
+        bottom: 1rem;
+        right: 1rem;
+        left: 1rem;
+      }
+    }
+    
+    /* Info overlay (top left) - optional */
+    #info-overlay {
+      position: fixed;
+      top: 2rem;
+      left: 2rem;
+      z-index: 10;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: none; /* Hidden by default, can be toggled */
+    }
+    
+    #info-overlay h2 {
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      opacity: 0.9;
+    }
+    
+    #info-overlay p {
+      font-size: 0.9rem;
+      opacity: 0.7;
+      line-height: 1.4;
+    }
+    
+    /* Loading states */
+    .loading {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    
+    /* Accessibility */
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- Media display (videos/images) -->
+    <div id="media-container" role="img" aria-label="Visual content from Iceland journey"></div>
+    
+    <!-- Map visualization -->
+    <div id="map-container" role="img" aria-label="Route map of Iceland journey"></div>
+    
+    <!-- Info overlay (optional) -->
+    <div id="info-overlay">
+      <h2>Iceland Radio Installation</h2>
+      <p>A continuous audio-visual journey across Iceland</p>
+    </div>
+    
+    <!-- UI overlays (tune-in button, loading, errors) -->
+    <div id="ui-container"></div>
+  </div>
+  
+  <!-- Main application script (ES6 modules) -->
+  <script type="module" src="./src/main.js"></script>
+  
+  <!-- Screen reader announcements -->
+  <div class="visually-hidden" role="status" aria-live="polite" aria-atomic="true" id="sr-announcements"></div>
+</body>
+</html>
