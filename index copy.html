@@ -54,7 +54,7 @@
       top: 0;
       right: 0;
       width: 400px;
-      bottom: 9rem;
+      bottom: 6rem;
       background: linear-gradient(to bottom, #1a1d1e, #25282a);
       z-index: 5;
       display: flex;
@@ -193,44 +193,14 @@
     @media (max-width: 1024px) {
       #media-container {
         right: 0;
-        top: 120px;
       }
       
       #right-sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        width: 100%;
-        height: 120px;
-        bottom: auto;
-        flex-direction: row;
-        padding: 0.5rem;
-        gap: 0.5rem;
-        border-left: none;
-        border-bottom: 1px solid rgba(217, 120, 69, 0.15);
-      }
-      
-      #map-container {
-        flex: 1;
-        min-height: 0;
-      }
-      
-      #earthquake-monitor {
-        flex: 1;
-        min-height: 0;
+        display: none;
       }
       
       #info-overlay {
-        padding: 1rem 1rem;
-      }
-      
-      .now-playing-info {
-        min-width: auto;
-      }
-      
-      .controls-left {
-        gap: 1rem;
+        padding: 1.5rem 1.5rem;
       }
     }
     
