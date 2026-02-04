@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Iceland Radio Installation - A continuous audio-visual journey">
+  <meta name="description" content="A continuous audio-visual journey across Iceland by Ginebra Raventós, Emilio Marx, Edgardo Gómez and Joan Lavandeira">
   <title>Iceland Radio Installation</title>
   
   <!-- Leaflet CSS for OpenStreetMap -->
@@ -48,18 +48,18 @@
       background: #000;
     }
     
-    /* Right sidebar - dark basalt grey */
+    /* Right sidebar - dark volcanic grey */
     #right-sidebar {
       position: fixed;
       top: 0;
       right: 0;
       width: 400px;
       bottom: 6rem;
-      background: linear-gradient(to bottom, #1a1a1c, #2a2a2e);
+      background: linear-gradient(to bottom, #1a1d1e, #25282a);
       z-index: 5;
       display: flex;
       flex-direction: column;
-      border-left: 1px solid rgba(255, 255, 255, 0.05);
+      border-left: 1px solid rgba(217, 120, 69, 0.15);
       padding: 1.5rem;
       gap: 1.5rem;
     }
@@ -75,15 +75,96 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
     
-    /* 3D terrain viewer at bottom of sidebar */
-    #terrain-viewer {
+    /* Earthquake monitor at bottom of sidebar */
+    #earthquake-monitor {
       width: 100%;
       flex: 1;
       min-height: 0;
-      background: rgba(0, 0, 0, 0.5);
-      overflow: hidden;
+      background: rgba(232, 232, 232, 0.05);
+      overflow-y: auto;
       border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(232, 232, 232, 0.1);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .earthquake-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+    
+    .earthquake-item {
+      display: flex;
+      gap: 0.6rem;
+      padding: 0.5rem;
+      margin-bottom: 0.4rem;
+      background: rgba(232, 232, 232, 0.03);
+      border-radius: 4px;
+      border-left: 2px solid transparent;
+    }
+    
+    .earthquake-item:hover {
+      background: rgba(232, 232, 232, 0.08);
+    }
+    
+    .earthquake-magnitude {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    
+    .earthquake-magnitude.low {
+      background: rgba(232, 232, 232, 0.1);
+      color: rgba(232, 232, 232, 0.6);
+      border: 1px solid rgba(232, 232, 232, 0.2);
+    }
+    
+    .earthquake-magnitude.medium {
+      background: rgba(217, 120, 69, 0.15);
+      color: rgba(217, 120, 69, 0.8);
+      border: 1px solid rgba(217, 120, 69, 0.3);
+    }
+    
+    .earthquake-magnitude.high {
+      background: rgba(217, 69, 69, 0.15);
+      color: rgba(217, 69, 69, 0.8);
+      border: 1px solid rgba(217, 69, 69, 0.3);
+    }
+    
+    .earthquake-magnitude .mag-value {
+      font-size: 0.75rem;
+    }
+    
+    .earthquake-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      justify-content: center;
+    }
+    
+    .earthquake-location {
+      font-size: 0.7rem;
+      color: rgba(232, 232, 232, 0.7);
+      font-weight: 400;
+    }
+    
+    .earthquake-details {
+      font-size: 0.65rem;
+      color: rgba(232, 232, 232, 0.4);
+    }
+    
+    .loading, .no-data, .error {
+      text-align: center;
+      padding: 1.5rem;
+      color: rgba(232, 232, 232, 0.3);
+      font-size: 0.7rem;
     }
     
     /* Leaflet map fills container */
@@ -130,56 +211,154 @@
       left: 0;
       right: 0;
       z-index: 10;
-      background: linear-gradient(to top, #1a1a1c, #2a2a2e);
-      padding: 2rem 2.5rem;
+      background: linear-gradient(to top, #1a1d1e, #25282a);
+      padding: 2rem 3rem;
       backdrop-filter: blur(20px);
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      border-top: 1px solid rgba(217, 120, 69, 0.15);
       display: flex;
-      justify-content: space-between;
+      align-items: center;
+      gap: 3rem;
+    }
+    
+    /* Left section - volume and frequency */
+    .controls-left {
+      display: flex;
       align-items: center;
       gap: 2rem;
     }
     
-    #info-overlay h2 {
-      font-size: 1.3rem;
-      font-weight: 500;
-      margin: 0;
-      color: #e8e8e8;
+    /* Volume control - vertical fader */
+    .volume-control {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.8rem;
+      height: 100%;
     }
     
-    #info-overlay p {
-      font-size: 1rem;
-      margin: 0.5rem 0 0 0;
-      color: #b8b8b8;
+    .volume-slider-container {
+      height: 80px;
+      width: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
     }
     
-    .now-playing-left {
-      flex: 1;
+    .volume-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 4px;
+      height: 80px;
+      background: rgba(90, 122, 95, 0.3);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+      writing-mode: bt-lr; /* IE */
+      -webkit-appearance: slider-vertical; /* WebKit */
+      accent-color: #d97845;
     }
     
-    .now-playing-center {
-      flex: 0 0 auto;
+    /* Track del slider */
+    .volume-slider::-webkit-slider-runnable-track {
+      background: rgba(90, 122, 95, 0.3);
+      border-radius: 2px;
     }
     
-    .now-playing-right {
-      text-align: right;
-      color: #999;
-      font-size: 0.9rem;
+    .volume-slider::-moz-range-track {
+      background: rgba(90, 122, 95, 0.3);
+      border-radius: 2px;
     }
     
-    /* Frequency bar graph */
+    /* Thumb del slider - NARANJA */
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      background: #d97845 !important;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 0 8px rgba(217, 120, 69, 0.5);
+      border: none;
+    }
+    
+    .volume-slider::-webkit-slider-thumb:hover {
+      background: #e8a05d !important;
+      box-shadow: 0 0 12px rgba(217, 120, 69, 0.8);
+    }
+    
+    .volume-slider::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      background: #d97845 !important;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      box-shadow: 0 0 8px rgba(217, 120, 69, 0.5);
+    }
+    
+    .volume-slider::-moz-range-thumb:hover {
+      background: #e8a05d !important;
+      box-shadow: 0 0 12px rgba(217, 120, 69, 0.8);
+    }
+    
+    /* Progress del slider - NARANJA */
+    .volume-slider::-moz-range-progress {
+      background: #d97845 !important;
+      border-radius: 2px;
+    }
+    
+    .volume-slider::-webkit-slider-runnable-track {
+      background: linear-gradient(to top, #d97845 var(--volume-percent, 100%), rgba(90, 122, 95, 0.3) var(--volume-percent, 100%));
+    }
+    
+    .volume-label {
+      font-size: 0.7rem;
+      color: #d97845;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+    
+    /* Frequency bars */
     #frequency-bars {
       display: flex;
       align-items: flex-end;
-      gap: 3px;
-      height: 40px;
+      gap: 4px;
+      height: 50px;
     }
     
     .frequency-bar {
-      width: 3px;
-      background: linear-gradient(to top, #4ecdc4, #45b7d1);
+      width: 4px;
+      background: linear-gradient(to top, #5a7a5f, #d97845);
       border-radius: 2px 2px 0 0;
       transition: height 0.1s ease;
+      box-shadow: 0 0 4px rgba(217, 120, 69, 0.3);
+    }
+    
+    /* Now playing info */
+    .now-playing-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      flex: 1;
+    }
+    
+    #info-overlay h2 {
+      font-size: 1.4rem;
+      font-weight: 500;
+      margin: 0;
+      color: #e8e8e8;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    
+    #info-overlay p {
+      font-size: 0.95rem;
+      margin: 0;
+      color: #7a9b7f;
     }
     
     /* Loading states */
@@ -207,22 +386,28 @@
     <!-- Media display (videos/images) - Left rectangle -->
     <div id="media-container" role="img" aria-label="Visual content from Iceland journey"></div>
     
-    <!-- Right sidebar - Map and 3D terrain -->
+    <!-- Right sidebar - Map and earthquake monitor -->
     <div id="right-sidebar">
       <!-- Map at top of sidebar -->
       <div id="map-container" role="img" aria-label="Route map of Iceland journey"></div>
       
-      <!-- 3D Terrain viewer at bottom -->
-      <div id="terrain-viewer" role="img" aria-label="3D terrain view of current location"></div>
+      <!-- Earthquake monitor at bottom -->
+      <div id="earthquake-monitor" role="region" aria-label="Recent earthquakes in Iceland"></div>
     </div>
     
     <!-- Now Playing Bar - Bottom -->
     <div id="info-overlay">
-      <div class="now-playing-left">
-        <h2 id="current-section">Iceland Sound Route</h2>
-        <p id="current-track">Loading...</p>
-      </div>
-      <div class="now-playing-center">
+      <!-- Left: Volume + Frequency -->
+      <div class="controls-left">
+        <!-- Volume fader vertical -->
+        <div class="volume-control">
+          <div class="volume-slider-container">
+            <input type="range" id="volume-slider" class="volume-slider" min="0" max="100" value="100" orient="vertical">
+          </div>
+          <span class="volume-label">VOL</span>
+        </div>
+        
+        <!-- Frequency bars -->
         <div id="frequency-bars">
           <div class="frequency-bar" style="height: 20px;"></div>
           <div class="frequency-bar" style="height: 30px;"></div>
@@ -241,8 +426,11 @@
           <div class="frequency-bar" style="height: 19px;"></div>
         </div>
       </div>
-      <div class="now-playing-right" id="next-track">
-        
+      
+      <!-- Track info -->
+      <div class="now-playing-info">
+        <h2 id="current-section">Iceland Sound Route</h2>
+        <p id="current-track">Loading...</p>
       </div>
     </div>
     

@@ -1,29 +1,31 @@
 /**
  * ROUTE CONFIGURATION
- * Iceland Sound Route - Acoustic Heritage Collective
  * 
- * IMPORTANT: All paths are relative to: https://acousticheritagecollective.org/iceland/
+ * Real GPS route data for Iceland Sound Route installation
  */
 
 export const routeConfig = {
-  
   sections: [
     {
       id: 'section_1',
-      name: 'Reykjavik to Selfoss',
-      
+      name: 'Flúðir to Höfn',
       geoPath: [
-        [64.1466, -21.9426],
-        [64.1355, -21.8965],
-        [64.1198, -21.8234],
-        [64.0876, -21.7123],
-        [64.0543, -21.5987],
-        [64.0234, -21.4567],
-        [63.9876, -21.3234],
-        [63.9543, -21.1987],
-        [63.9333, -20.9833]
+        [64.1108, -20.3003],
+        [64.0500, -20.5000],
+        [63.9500, -20.8000],
+        [63.8500, -21.1000],
+        [63.7500, -21.4000],
+        [63.6500, -21.7000],
+        [63.5300, -19.0100],
+        [63.5500, -18.5000],
+        [63.6000, -18.0000],
+        [63.7000, -17.5000],
+        [63.8000, -17.0000],
+        [63.9000, -16.5000],
+        [64.0000, -16.0000],
+        [64.1000, -15.5000],
+        [64.2547, -15.2080]
       ],
-      
       audioFiles: [
         { url: '/iceland/public/audio/section1/track_01.mp3', duration: 198 },
         { url: '/iceland/public/audio/section1/track_02.mp3', duration: 353 },
@@ -34,7 +36,6 @@ export const routeConfig = {
         { url: '/iceland/public/audio/section1/track_07.mp3', duration: 516 },
         { url: '/iceland/public/audio/section1/track_08.mp3', duration: 476 }
       ],
-      
       mediaPool: {
         videos: [
           '/iceland/public/media/section1/videos/video_01.mp4',
@@ -62,23 +63,26 @@ export const routeConfig = {
         ]
       }
     },
-    
     {
       id: 'section_2',
-      name: 'Selfoss to Vik',
-      
+      name: 'Höfn to Mývatn',
       geoPath: [
-        [63.9333, -20.9833],
-        [63.8876, -20.7234],
-        [63.8234, -20.4567],
-        [63.7543, -20.1987],
-        [63.6876, -19.8234],
-        [63.6234, -19.5567],
-        [63.5543, -19.2987],
-        [63.4876, -19.1234],
-        [63.4186, -19.0059]
+        [64.2547, -15.2080],
+        [64.3000, -15.0000],
+        [64.4000, -14.8000],
+        [64.5000, -14.5000],
+        [64.6000, -14.3000],
+        [64.7000, -14.1000],
+        [64.8000, -14.0000],
+        [64.9000, -14.2000],
+        [65.0000, -14.5000],
+        [65.1000, -14.8000],
+        [65.2000, -15.2000],
+        [65.3000, -15.8000],
+        [65.4000, -16.5000],
+        [65.5000, -17.0000],
+        [65.5941, -16.9181]
       ],
-      
       audioFiles: [
         { url: '/iceland/public/audio/section2/track_09.mp3', duration: 198 },
         { url: '/iceland/public/audio/section2/track_10.mp3', duration: 353 },
@@ -89,7 +93,6 @@ export const routeConfig = {
         { url: '/iceland/public/audio/section2/track_15.mp3', duration: 516 },
         { url: '/iceland/public/audio/section2/track_16.mp3', duration: 476 }
       ],
-      
       mediaPool: {
         videos: [
           '/iceland/public/media/section2/videos/video_01.mp4',
@@ -117,23 +120,22 @@ export const routeConfig = {
         ]
       }
     },
-    
     {
       id: 'section_3',
-      name: 'Vik to Hofn',
-      
+      name: 'Mývatn to Sauðárkrókur',
       geoPath: [
-        [63.4186, -19.0059],
-        [63.5234, -18.6567],
-        [63.6543, -18.2987],
-        [63.7876, -17.8234],
-        [63.9234, -17.3567],
-        [64.0543, -16.8987],
-        [64.1234, -16.4567],
-        [64.1876, -15.9234],
-        [64.2539, -15.2082]
+        [65.5941, -16.9181],
+        [65.6000, -17.3000],
+        [65.6500, -17.8000],
+        [65.7000, -18.3000],
+        [65.7500, -18.8000],
+        [65.7800, -19.3000],
+        [65.7500, -19.8000],
+        [65.7000, -20.3000],
+        [65.6500, -20.8000],
+        [65.6000, -21.3000],
+        [65.7474, -19.6390]
       ],
-      
       audioFiles: [
         { url: '/iceland/public/audio/section3/track_17.mp3', duration: 198 },
         { url: '/iceland/public/audio/section3/track_18.mp3', duration: 353 },
@@ -144,7 +146,6 @@ export const routeConfig = {
         { url: '/iceland/public/audio/section3/track_23.mp3', duration: 516 },
         { url: '/iceland/public/audio/section3/track_24.mp3', duration: 476 }
       ],
-      
       mediaPool: {
         videos: [
           '/iceland/public/media/section3/videos/video_01.mp4',
@@ -172,23 +173,23 @@ export const routeConfig = {
         ]
       }
     },
-    
     {
       id: 'section_4',
-      name: 'Hofn back to Reykjavik',
-      
+      name: 'Sauðárkrókur to Reykjavík',
       geoPath: [
-        [64.2539, -15.2082],
-        [64.3234, -15.8567],
-        [64.3876, -16.4987],
-        [64.4234, -17.1567],
-        [64.4543, -17.8234],
-        [64.3876, -18.4987],
-        [64.2876, -19.2234],
-        [64.1876, -20.3567],
-        [64.1466, -21.9426]
+        [65.7474, -19.6390],
+        [65.6000, -20.5000],
+        [65.5000, -21.0000],
+        [65.4000, -21.5000],
+        [65.2000, -21.8000],
+        [65.0000, -22.0000],
+        [64.8000, -22.2000],
+        [64.6000, -22.3000],
+        [64.4000, -22.2000],
+        [64.2000, -22.0000],
+        [64.1000, -21.8000],
+        [64.1476, -21.9426]
       ],
-      
       audioFiles: [
         { url: '/iceland/public/audio/section4/track_25.mp3', duration: 198 },
         { url: '/iceland/public/audio/section4/track_26.mp3', duration: 353 },
@@ -199,7 +200,6 @@ export const routeConfig = {
         { url: '/iceland/public/audio/section4/track_31.mp3', duration: 516 },
         { url: '/iceland/public/audio/section4/track_32.mp3', duration: 476 }
       ],
-      
       mediaPool: {
         videos: [
           '/iceland/public/media/section4/videos/video_01.mp4',

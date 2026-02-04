@@ -38,14 +38,14 @@ export class TerrainViewer {
    */
   async setupViewer() {
     try {
-      // Create OpenStreetMap imagery provider (completely free, no token)
-      const osmProvider = new Cesium.OpenStreetMapImageryProvider({
-        url: 'https://a.tile.openstreetmap.org/'
+      // Create ESRI World Imagery provider (free satellite imagery, no token)
+      const esriProvider = new Cesium.ArcGisMapServerImageryProvider({
+        url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
       });
       
-      // Create Cesium viewer with OSM imagery
+      // Create Cesium viewer with ESRI satellite imagery
       this.viewer = new Cesium.Viewer(this.container, {
-        imageryProvider: osmProvider,
+        imageryProvider: esriProvider,
         baseLayerPicker: false,
         geocoder: false,
         homeButton: false,
@@ -57,7 +57,7 @@ export class TerrainViewer {
         vrButton: false,
         infoBox: false,
         selectionIndicator: false,
-        creditContainer: document.createElement('div'), // Hide credits
+        creditContainer: document.createElement('div'),
       });
       
       // Set initial view to Iceland
@@ -70,10 +70,10 @@ export class TerrainViewer {
         }
       });
       
-      // Enable lighting for better visuals
+      // Enable lighting
       this.viewer.scene.globe.enableLighting = true;
       
-      console.log('✓ Cesium 3D viewer initialized with OpenStreetMap');
+      console.log('✓ Cesium 3D viewer initialized with ESRI satellite imagery');
       
     } catch (error) {
       console.error('✗ Failed to initialize Cesium:', error);

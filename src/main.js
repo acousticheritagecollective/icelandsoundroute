@@ -9,7 +9,7 @@ import { routeConfig } from './data/route-config.js';
 import { StateManager } from './systems/state-manager.js';
 import { MediaDisplay } from './components/media-display.js';
 import { MapVisualizer } from './components/map-visualizer.js';
-import { TerrainViewer } from './components/terrain-viewer.js';
+import { EarthquakeMonitor } from './components/earthquake-monitor.js';
 import { UI } from './components/ui.js';
 
 class RadioInstallation {
@@ -17,7 +17,7 @@ class RadioInstallation {
     this.stateManager = null;
     this.mediaDisplay = null;
     this.mapVisualizer = null;
-    this.terrainViewer = null;
+    this.earthquakeMonitor = null;
     this.ui = null;
     
     this.isInitialized = false;
@@ -34,10 +34,10 @@ class RadioInstallation {
       // Get DOM containers
       const mediaContainer = document.getElementById('media-container');
       const mapContainer = document.getElementById('map-container');
-      const terrainContainer = document.getElementById('terrain-viewer');
+      const earthquakeContainer = document.getElementById('earthquake-monitor');
       const uiContainer = document.getElementById('ui-container');
       
-      if (!mediaContainer || !mapContainer || !terrainContainer || !uiContainer) {
+      if (!mediaContainer || !mapContainer || !earthquakeContainer || !uiContainer) {
         throw new Error('Required DOM containers not found');
       }
       
@@ -53,8 +53,8 @@ class RadioInstallation {
       const routeInfo = this.stateManager.getRouteInfo();
       this.mapVisualizer.loadRoute(routeInfo.sections);
       
-      // Initialize 3D terrain viewer
-      this.terrainViewer = new TerrainViewer(terrainContainer);
+      // Initialize earthquake monitor
+      this.earthquakeMonitor = new EarthquakeMonitor(earthquakeContainer);
       
       // Initialize media display
       this.mediaDisplay = new MediaDisplay(
@@ -92,10 +92,7 @@ class RadioInstallation {
       this.mapVisualizer.update(context);
     }
     
-    // Update 3D terrain viewer
-    if (this.terrainViewer) {
-      this.terrainViewer.update(context);
-    }
+    // Earthquake monitor updates on its own timer, no need to update here
   }
   
   /**
@@ -158,6 +155,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Start animation loop
   updateFrequencyBars();
+  
+  // Volume control
+  const volumeSlider = document.getElementById('volume-slider');
+  if (volumeSlider && app.stateManager?.audioEngine) {
+    volumeSlider.addEventListener('input', (e) => {
+      const volume = e.target.value / 100; // Convert 0-100 to 0-1
+      if (app.stateManager.audioEngine.masterGainNode) {
+        app.stateManager.audioEngine.masterGainNode.gain.value = volume;
+      }
+    });
+  }
 });
 
 // Handle page visibility changes (pause when tab hidden, resume when visible)

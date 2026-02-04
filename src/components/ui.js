@@ -80,7 +80,7 @@ export class UI {
     
     // Subtitle
     const subtitle = document.createElement('p');
-    subtitle.textContent = 'A continuous audio-visual journey across Iceland';
+    subtitle.textContent = 'A continuous audio-visual journey across Iceland by Ginebra Raventós, Emilio Marx, Edgardo Gómez and Joan Lavandeira';
     subtitle.style.cssText = `
       color: rgba(255, 255, 255, 0.7);
       font-family: 'Helvetica Neue', Arial, sans-serif;
