@@ -26,6 +26,7 @@ export class AudioEngine {
     this.currentFileInfo = null;
     this.isPlaying = false;
     this.masterGainNode = null;
+    this.analyser = null; // For frequency analysis
     
     // Preload tracking
     this.preloadedFiles = new Set();
@@ -49,6 +50,12 @@ export class AudioEngine {
       this.masterGainNode = this.audioContext.createGain();
       this.masterGainNode.connect(this.audioContext.destination);
       
+      // Create analyser node for frequency visualization
+      this.analyser = this.audioContext.createAnalyser();
+      this.analyser.fftSize = 64; // Small size for 15 bars
+      this.analyser.smoothingTimeConstant = 0.8;
+      this.masterGainNode.connect(this.analyser);
+      
       console.log('Audio engine initialized');
       console.log('  Sample rate:', this.audioContext.sampleRate);
       console.log('  State:', this.audioContext.state);
@@ -58,6 +65,20 @@ export class AudioEngine {
       console.error('Failed to initialize audio engine:', error);
       return false;
     }
+  }
+  
+  /**
+   * Get frequency data for visualization
+   * Returns array of values 0-255
+   */
+  getFrequencyData() {
+    if (!this.analyser) return null;
+    
+    const bufferLength = this.analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    this.analyser.getByteFrequencyData(dataArray);
+    
+    return dataArray;
   }
   
   /**

@@ -32,10 +32,10 @@ export class MapVisualizer {
           attributionControl: true
         }).setView([64.9631, -19.0208], 6); // Iceland center
         
-        // Add OpenStreetMap tiles with dark theme
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        // Add satellite imagery tiles (ESRI World Imagery)
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
           maxZoom: 19,
-          opacity: 1
+          attribution: 'Tiles &copy; Esri'
         }).addTo(this.map);
         
         // Force map to recalculate size
@@ -43,7 +43,7 @@ export class MapVisualizer {
           this.map.invalidateSize();
         }, 100);
         
-        console.log('Map visualizer initialized with OpenStreetMap');
+        console.log('Map visualizer initialized with satellite imagery');
         
         // If route data was already provided, load it now
         if (this.pendingRouteData) {

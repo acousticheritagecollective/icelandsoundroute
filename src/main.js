@@ -9,6 +9,7 @@ import { routeConfig } from './data/route-config.js';
 import { StateManager } from './systems/state-manager.js';
 import { MediaDisplay } from './components/media-display.js';
 import { MapVisualizer } from './components/map-visualizer.js';
+import { TerrainViewer } from './components/terrain-viewer.js';
 import { UI } from './components/ui.js';
 
 class RadioInstallation {
@@ -16,6 +17,7 @@ class RadioInstallation {
     this.stateManager = null;
     this.mediaDisplay = null;
     this.mapVisualizer = null;
+    this.terrainViewer = null;
     this.ui = null;
     
     this.isInitialized = false;
@@ -32,9 +34,10 @@ class RadioInstallation {
       // Get DOM containers
       const mediaContainer = document.getElementById('media-container');
       const mapContainer = document.getElementById('map-container');
+      const terrainContainer = document.getElementById('terrain-viewer');
       const uiContainer = document.getElementById('ui-container');
       
-      if (!mediaContainer || !mapContainer || !uiContainer) {
+      if (!mediaContainer || !mapContainer || !terrainContainer || !uiContainer) {
         throw new Error('Required DOM containers not found');
       }
       
@@ -49,6 +52,9 @@ class RadioInstallation {
       this.mapVisualizer = new MapVisualizer(mapContainer);
       const routeInfo = this.stateManager.getRouteInfo();
       this.mapVisualizer.loadRoute(routeInfo.sections);
+      
+      // Initialize 3D terrain viewer
+      this.terrainViewer = new TerrainViewer(terrainContainer);
       
       // Initialize media display
       this.mediaDisplay = new MediaDisplay(
@@ -86,8 +92,10 @@ class RadioInstallation {
       this.mapVisualizer.update(context);
     }
     
-    // Could also update other UI elements here
-    // (progress bar, current section name, etc.)
+    // Update 3D terrain viewer
+    if (this.terrainViewer) {
+      this.terrainViewer.update(context);
+    }
   }
   
   /**
@@ -126,6 +134,30 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // Make app instance globally accessible for debugging
   window.radioInstallation = app;
+  
+  // Animate frequency bars with REAL audio data
+  const bars = document.querySelectorAll('.frequency-bar');
+  
+  function updateFrequencyBars() {
+    if (app.stateManager?.audioEngine?.analyser) {
+      const freqData = app.stateManager.audioEngine.getFrequencyData();
+      
+      if (freqData) {
+        // Update each bar with real frequency data
+        bars.forEach((bar, i) => {
+          // Map frequency data (0-255) to height (5-40px)
+          const value = freqData[i] || 0;
+          const height = (value / 255) * 35 + 5;
+          bar.style.height = `${height}px`;
+        });
+      }
+    }
+    
+    requestAnimationFrame(updateFrequencyBars);
+  }
+  
+  // Start animation loop
+  updateFrequencyBars();
 });
 
 // Handle page visibility changes (pause when tab hidden, resume when visible)

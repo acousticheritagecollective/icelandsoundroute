@@ -9,6 +9,10 @@
   <!-- Leaflet CSS for OpenStreetMap -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   
+  <!-- Cesium for 3D terrain (completely free, no token required) -->
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.109/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.109/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  
   <style>
     * {
       margin: 0;
@@ -33,30 +37,53 @@
       flex-direction: column;
     }
     
-    /* Media display (full screen background) */
+    /* Media display (left side, not full screen) */
     #media-container {
       position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
+      right: 400px;
       height: 100%;
       z-index: 1;
       background: #000;
     }
     
-    /* Map overlay (bottom right, above now playing bar) */
-    #map-container {
+    /* Right sidebar - dark basalt grey */
+    #right-sidebar {
       position: fixed;
-      bottom: 6rem;
-      right: 2rem;
+      top: 0;
+      right: 0;
       width: 400px;
-      height: 300px;
-      z-index: 10;
-      background: rgba(0, 0, 0, 0.9);
-      border-radius: 12px;
+      bottom: 6rem;
+      background: linear-gradient(to bottom, #1a1a1c, #2a2a2e);
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 1.5rem;
+      gap: 1.5rem;
+    }
+    
+    /* Map at top of sidebar */
+    #map-container {
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+      background: rgba(0, 0, 0, 0.3);
       overflow: hidden;
-      backdrop-filter: blur(10px);
-      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* 3D terrain viewer at bottom of sidebar */
+    #terrain-viewer {
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+      background: rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
     
     /* Leaflet map fills container */
@@ -82,13 +109,17 @@
     }
     
     /* Responsive adjustments */
-    @media (max-width: 768px) {
-      #map-container {
-        width: calc(100% - 2rem);
-        height: 200px;
-        bottom: 1rem;
-        right: 1rem;
-        left: 1rem;
+    @media (max-width: 1024px) {
+      #media-container {
+        right: 0;
+      }
+      
+      #right-sidebar {
+        display: none;
+      }
+      
+      #info-overlay {
+        padding: 1.5rem 1.5rem;
       }
     }
     
@@ -99,38 +130,56 @@
       left: 0;
       right: 0;
       z-index: 10;
-      background: linear-gradient(to top, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.7));
-      padding: 1.5rem 2rem;
+      background: linear-gradient(to top, #1a1a1c, #2a2a2e);
+      padding: 2rem 2.5rem;
       backdrop-filter: blur(20px);
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 2rem;
     }
     
     #info-overlay h2 {
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       font-weight: 500;
       margin: 0;
-      opacity: 0.9;
-      color: #fff;
+      color: #e8e8e8;
     }
     
     #info-overlay p {
-      font-size: 0.95rem;
-      opacity: 0.7;
-      margin: 0.25rem 0 0 0;
-      color: #aaa;
+      font-size: 1rem;
+      margin: 0.5rem 0 0 0;
+      color: #b8b8b8;
     }
     
     .now-playing-left {
       flex: 1;
     }
     
+    .now-playing-center {
+      flex: 0 0 auto;
+    }
+    
     .now-playing-right {
       text-align: right;
-      opacity: 0.6;
-      font-size: 0.85rem;
+      color: #999;
+      font-size: 0.9rem;
+    }
+    
+    /* Frequency bar graph */
+    #frequency-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 40px;
+    }
+    
+    .frequency-bar {
+      width: 3px;
+      background: linear-gradient(to top, #4ecdc4, #45b7d1);
+      border-radius: 2px 2px 0 0;
+      transition: height 0.1s ease;
     }
     
     /* Loading states */
@@ -155,17 +204,42 @@
 </head>
 <body>
   <div id="app">
-    <!-- Media display (videos/images) -->
+    <!-- Media display (videos/images) - Left rectangle -->
     <div id="media-container" role="img" aria-label="Visual content from Iceland journey"></div>
     
-    <!-- Map visualization -->
-    <div id="map-container" role="img" aria-label="Route map of Iceland journey"></div>
+    <!-- Right sidebar - Map and 3D terrain -->
+    <div id="right-sidebar">
+      <!-- Map at top of sidebar -->
+      <div id="map-container" role="img" aria-label="Route map of Iceland journey"></div>
+      
+      <!-- 3D Terrain viewer at bottom -->
+      <div id="terrain-viewer" role="img" aria-label="3D terrain view of current location"></div>
+    </div>
     
     <!-- Now Playing Bar - Bottom -->
     <div id="info-overlay">
       <div class="now-playing-left">
         <h2 id="current-section">Iceland Sound Route</h2>
         <p id="current-track">Loading...</p>
+      </div>
+      <div class="now-playing-center">
+        <div id="frequency-bars">
+          <div class="frequency-bar" style="height: 20px;"></div>
+          <div class="frequency-bar" style="height: 30px;"></div>
+          <div class="frequency-bar" style="height: 15px;"></div>
+          <div class="frequency-bar" style="height: 35px;"></div>
+          <div class="frequency-bar" style="height: 25px;"></div>
+          <div class="frequency-bar" style="height: 40px;"></div>
+          <div class="frequency-bar" style="height: 18px;"></div>
+          <div class="frequency-bar" style="height: 32px;"></div>
+          <div class="frequency-bar" style="height: 22px;"></div>
+          <div class="frequency-bar" style="height: 28px;"></div>
+          <div class="frequency-bar" style="height: 16px;"></div>
+          <div class="frequency-bar" style="height: 36px;"></div>
+          <div class="frequency-bar" style="height: 24px;"></div>
+          <div class="frequency-bar" style="height: 33px;"></div>
+          <div class="frequency-bar" style="height: 19px;"></div>
+        </div>
       </div>
       <div class="now-playing-right" id="next-track">
         
