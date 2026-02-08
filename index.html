@@ -6,6 +6,11 @@
   <meta name="description" content="A continuous audio-visual journey across Iceland by Ginebra Raventós, Emilio Marx, Edgardo Gómez and Joan Lavandeira">
   <title>Iceland Radio Installation</title>
   
+  <!-- Google Fonts - Barlow Condensed -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
   <!-- Leaflet CSS for OpenStreetMap -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   
@@ -21,8 +26,7 @@
     }
     
     body {
-      font-family: 'Helvetica Neue', Arial, sans-serif;
-      background: #000;
+      font-family: 'Barlow Condensed', 'Helvetica Neue', Helvetica, sans-serif;
       color: #fff;
       overflow: hidden;
       width: 100vw;
@@ -42,136 +46,67 @@
       position: fixed;
       top: 0;
       left: 0;
-      right: 400px;
+      right: 0;
+      bottom: 0;
+      width: 100%;
       height: 100%;
       z-index: 1;
-      background: #000;
     }
     
-    /* Right sidebar - dark volcanic grey */
+    /* BARRAS VERTICALES NEGRAS */
+    #black-bars-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 150px;
+      z-index: 5;
+      display: flex;
+      pointer-events: none;
+    }
+    
+    .black-bar {
+      width: 25%;
+      height: 100%;
+      background: #000;
+      opacity: 0.85;
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      transition: opacity 0.4s ease-in-out, backdrop-filter 0.4s ease-in-out;
+    }
+    
+    .black-bar.transparent {
+      opacity: 0 !important;
+      backdrop-filter: blur(0px) !important;
+      -webkit-backdrop-filter: blur(0px) !important;
+      background: transparent !important;
+    }
+    
+    /* Right sidebar - dark volcanic grey with opacity */
     #right-sidebar {
       position: fixed;
       top: 0;
       right: 0;
-      width: 400px;
-      bottom: 9rem;
-      background: linear-gradient(to bottom, #1a1d1e, #25282a);
-      z-index: 5;
+      width: 25%;
+      bottom: 150px;
+      background: white;
+      z-index: 2;
       display: flex;
       flex-direction: column;
-      border-left: 1px solid rgba(217, 120, 69, 0.15);
-      padding: 1.5rem;
-      gap: 1.5rem;
     }
     
-    /* Map at top of sidebar */
+    /* Map takes half of sidebar */
     #map-container {
       width: 100%;
       flex: 1;
       min-height: 0;
-      background: rgba(0, 0, 0, 0.3);
       overflow: hidden;
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    /* Earthquake monitor at bottom of sidebar */
-    #earthquake-monitor {
-      width: 100%;
-      flex: 1;
-      min-height: 0;
-      background: rgba(232, 232, 232, 0.05);
-      overflow-y: auto;
-      border-radius: 8px;
-      border: 1px solid rgba(232, 232, 232, 0.1);
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .earthquake-list {
-      flex: 1;
-      overflow-y: auto;
-    }
-    
-    .earthquake-item {
-      display: flex;
-      gap: 0.6rem;
-      padding: 0.5rem;
-      margin-bottom: 0.4rem;
-      background: rgba(232, 232, 232, 0.03);
-      border-radius: 4px;
-      border-left: 2px solid transparent;
-    }
-    
-    .earthquake-item:hover {
-      background: rgba(232, 232, 232, 0.08);
-    }
-    
-    .earthquake-magnitude {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      font-weight: 500;
-      flex-shrink: 0;
-    }
-    
-    .earthquake-magnitude.low {
-      background: rgba(232, 232, 232, 0.1);
-      color: rgba(232, 232, 232, 0.6);
-      border: 1px solid rgba(232, 232, 232, 0.2);
-    }
-    
-    .earthquake-magnitude.medium {
-      background: rgba(217, 120, 69, 0.15);
-      color: rgba(217, 120, 69, 0.8);
-      border: 1px solid rgba(217, 120, 69, 0.3);
-    }
-    
-    .earthquake-magnitude.high {
-      background: rgba(217, 69, 69, 0.15);
-      color: rgba(217, 69, 69, 0.8);
-      border: 1px solid rgba(217, 69, 69, 0.3);
-    }
-    
-    .earthquake-magnitude .mag-value {
-      font-size: 0.75rem;
-    }
-    
-    .earthquake-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 0.15rem;
-      justify-content: center;
-    }
-    
-    .earthquake-location {
-      font-size: 0.7rem;
-      color: rgba(232, 232, 232, 0.7);
-      font-weight: 400;
-    }
-    
-    .earthquake-details {
-      font-size: 0.65rem;
-      color: rgba(232, 232, 232, 0.4);
-    }
-    
-    .loading, .no-data, .error {
-      text-align: center;
-      padding: 1.5rem;
-      color: rgba(232, 232, 232, 0.3);
-      font-size: 0.7rem;
     }
     
     /* Leaflet map fills container */
     #map-container .leaflet-container {
       width: 100%;
       height: 100%;
-      border-radius: 12px;
     }
     
     /* UI container (for overlays) */
@@ -193,7 +128,8 @@
     @media (max-width: 1024px) {
       #media-container {
         right: 0;
-        top: 120px;
+        top: 140px;
+        bottom: 140px;
       }
       
       #right-sidebar {
@@ -202,13 +138,10 @@
         left: 0;
         right: 0;
         width: 100%;
-        height: 120px;
+        height: 150px;
         bottom: auto;
         flex-direction: row;
-        padding: 0.5rem;
-        gap: 0.5rem;
         border-left: none;
-        border-bottom: 1px solid rgba(217, 120, 69, 0.15);
       }
       
       #map-container {
@@ -216,13 +149,9 @@
         min-height: 0;
       }
       
-      #earthquake-monitor {
-        flex: 1;
-        min-height: 0;
-      }
-      
       #info-overlay {
         padding: 1rem 1rem;
+        height: 140px;
       }
       
       .now-playing-info {
@@ -232,6 +161,12 @@
       .controls-left {
         gap: 1rem;
       }
+      
+      /* Ajuste de barras en móvil */
+      #black-bars-container {
+        bottom: 140px;
+        top: 150px;
+      }
     }
     
     /* Info overlay - Now Playing Bar at Bottom */
@@ -240,14 +175,14 @@
       bottom: 0;
       left: 0;
       right: 0;
+      height: 150px;
       z-index: 10;
-      background: linear-gradient(to top, #1a1d1e, #25282a);
+      background: #0c0e10;
       padding: 2rem 3rem;
-      backdrop-filter: blur(20px);
-      border-top: 1px solid rgba(217, 120, 69, 0.15);
       display: flex;
       align-items: center;
       gap: 3rem;
+      box-sizing: border-box;
     }
     
     /* Left section - volume and frequency */
@@ -280,77 +215,78 @@
       appearance: none;
       width: 4px;
       height: 80px;
-      background: rgba(90, 122, 95, 0.3);
+      background: rgba(116, 121, 120, 0.4);
       border-radius: 2px;
       outline: none;
       cursor: pointer;
       writing-mode: bt-lr; /* IE */
       -webkit-appearance: slider-vertical; /* WebKit */
-      accent-color: #d97845;
+      accent-color: white;
     }
     
     /* Track del slider */
     .volume-slider::-webkit-slider-runnable-track {
-      background: rgba(90, 122, 95, 0.3);
+      background: rgba(50, 53, 53, 0.5);
       border-radius: 2px;
     }
     
     .volume-slider::-moz-range-track {
-      background: rgba(90, 122, 95, 0.3);
+      background: rgba(50, 53, 53, 0.5);
       border-radius: 2px;
     }
     
-    /* Thumb del slider - NARANJA */
+    /* Thumb del slider - SILVER */
     .volume-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
       width: 14px;
       height: 14px;
-      background: #d97845 !important;
+      background: white !important;
       border-radius: 50%;
       cursor: pointer;
       transition: all 0.2s;
-      box-shadow: 0 0 8px rgba(217, 120, 69, 0.5);
+      box-shadow: 0 0 8px rgba(168, 181, 178, 0.5);
       border: none;
     }
     
     .volume-slider::-webkit-slider-thumb:hover {
-      background: #e8a05d !important;
-      box-shadow: 0 0 12px rgba(217, 120, 69, 0.8);
+      background: #d3d6d8 !important;
+      box-shadow: 0 0 12px rgba(195, 198, 200, 0.8);
     }
     
     .volume-slider::-moz-range-thumb {
       width: 14px;
       height: 14px;
-      background: #d97845 !important;
+      background: #c3c6c8 !important;
       border-radius: 50%;
       cursor: pointer;
       border: none;
       transition: all 0.2s;
-      box-shadow: 0 0 8px rgba(217, 120, 69, 0.5);
+      box-shadow: 0 0 8px rgba(168, 181, 178, 0.5);
     }
     
     .volume-slider::-moz-range-thumb:hover {
-      background: #e8a05d !important;
-      box-shadow: 0 0 12px rgba(217, 120, 69, 0.8);
+      background: #d3d6d8 !important;
+      box-shadow: 0 0 12px rgba(195, 198, 200, 0.8);
     }
     
-    /* Progress del slider - NARANJA */
+    /* Progress del slider - ASH GREY */
     .volume-slider::-moz-range-progress {
-      background: #d97845 !important;
+      background: white !important;
       border-radius: 2px;
     }
     
     .volume-slider::-webkit-slider-runnable-track {
-      background: linear-gradient(to top, #d97845 var(--volume-percent, 100%), rgba(90, 122, 95, 0.3) var(--volume-percent, 100%));
+      background: linear-gradient(to top, #a8b5b2 var(--volume-percent, 100%), rgba(50, 53, 53, 0.5) var(--volume-percent, 100%));
     }
     
     .volume-label {
       font-size: 0.7rem;
-      color: #d97845;
+      color: #a8b5b2;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      font-weight: 600;
+      letter-spacing: 2px;
+      font-weight: 400;
+      font-family: 'Barlow Condensed', 'Helvetica Neue', Helvetica, sans-serif;
     }
     
     /* Frequency bars */
@@ -362,11 +298,11 @@
     }
     
     .frequency-bar {
-      width: 4px;
-      background: linear-gradient(to top, #5a7a5f, #d97845);
+      width: 2px;
+      background: linear-gradient(to top, #747978, #c3c6c8);
       border-radius: 2px 2px 0 0;
       transition: height 0.1s ease;
-      box-shadow: 0 0 4px rgba(217, 120, 69, 0.3);
+      box-shadow: 0 0 4px rgba(168, 181, 178, 0.3);
     }
     
     /* Now playing info */
@@ -379,16 +315,20 @@
     
     #info-overlay h2 {
       font-size: 1.4rem;
-      font-weight: 500;
+      font-weight: 400;
       margin: 0;
-      color: #e8e8e8;
+      color: #c3c6c8;
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      font-family: 'Barlow Condensed', 'Helvetica Neue', Helvetica, sans-serif;
+      letter-spacing: 0.5px;
     }
     
     #info-overlay p {
-      font-size: 0.95rem;
+      font-size: 0.65rem;
       margin: 0;
-      color: #7a9b7f;
+      color: #a8b5b2;
+      font-family: 'Barlow Condensed', 'Helvetica Neue', Helvetica, sans-serif;
+      font-style: italic;
     }
     
     /* Loading states */
@@ -416,13 +356,18 @@
     <!-- Media display (videos/images) - Left rectangle -->
     <div id="media-container" role="img" aria-label="Visual content from Iceland journey"></div>
     
-    <!-- Right sidebar - Map and earthquake monitor -->
+    <!-- BARRAS NEGRAS VERTICALES -->
+    <div id="black-bars-container">
+      <div class="black-bar" data-bar="0"></div>
+      <div class="black-bar" data-bar="1"></div>
+      <div class="black-bar" data-bar="2"></div>
+      <div class="black-bar" data-bar="3"></div>
+    </div>
+    
+    <!-- Right sidebar - Map and Cameras -->
     <div id="right-sidebar">
-      <!-- Map at top of sidebar -->
+      <!-- Map at top -->
       <div id="map-container" role="img" aria-label="Route map of Iceland journey"></div>
-      
-      <!-- Earthquake monitor at bottom -->
-      <div id="earthquake-monitor" role="region" aria-label="Recent earthquakes in Iceland"></div>
     </div>
     
     <!-- Now Playing Bar - Bottom -->
@@ -459,7 +404,7 @@
       
       <!-- Track info -->
       <div class="now-playing-info">
-        <h2 id="current-section">Iceland Sound Route</h2>
+        <h2><span style="font-size: 0.9rem; color: #747978; letter-spacing: 3px;"><span id="current-section" style="color: #747978;">Iceland Sound Route</span></span></h2>
         <p id="current-track">Loading...</p>
       </div>
     </div>
@@ -470,6 +415,60 @@
   
   <!-- Leaflet JS for OpenStreetMap -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <!-- Script de animación de barras -->
+  <script>
+    // Función para animar las barras negras con blur y opacidad variable
+    function animateBlackBars() {
+      const bars = document.querySelectorAll('.black-bar');
+      
+      function toggleRandomBar() {
+        // Seleccionar una barra aleatoria (0-3)
+        const randomBarIndex = Math.floor(Math.random() * 4);
+        const randomBar = bars[randomBarIndex];
+        
+        // Si la barra está transparente, la hacemos NEGRA con opacidad y blur aleatorios
+        if (randomBar.classList.contains('transparent')) {
+          randomBar.classList.remove('transparent');
+          
+          // Opacidad aleatoria entre 0.9 y 1.0 (mucho más negras)
+          const randomOpacity = Math.random() * 0.1 + 0.9; // 0.9 a 1.0
+          randomBar.style.opacity = randomOpacity;
+          
+          // Blur aleatorio entre 20px y 40px (efecto mancha, muy borroso)
+          const randomBlur = Math.floor(Math.random() * 21) + 20; // 20px a 40px
+          randomBar.style.backdropFilter = `blur(${randomBlur}px)`;
+          randomBar.style.webkitBackdropFilter = `blur(${randomBlur}px)`;
+        } else {
+          // Si la barra está NEGRA, la hacemos completamente TRANSPARENTE (sin blur, sin opacidad)
+          randomBar.classList.add('transparent');
+        }
+        
+        // Programar siguiente cambio en tiempo aleatorio más rápido (0.3-1.5 segundos)
+        const randomDelay = (Math.random() * 1.2 + 0.3) * 1000; // 300ms a 1500ms
+        setTimeout(toggleRandomBar, randomDelay);
+      }
+      
+      // Inicializar barras con valores aleatorios al inicio (todas empiezan NEGRAS)
+      bars.forEach(bar => {
+        const initialOpacity = Math.random() * 0.1 + 0.9;
+        const initialBlur = Math.floor(Math.random() * 21) + 20;
+        bar.style.opacity = initialOpacity;
+        bar.style.backdropFilter = `blur(${initialBlur}px)`;
+        bar.style.webkitBackdropFilter = `blur(${initialBlur}px)`;
+      });
+      
+      // Iniciar la animación
+      toggleRandomBar();
+    }
+    
+    // Iniciar cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', animateBlackBars);
+    } else {
+      animateBlackBars();
+    }
+  </script>
   
   <!-- Main application script (ES6 modules) -->
   <script type="module" src="./src/main.js"></script>
