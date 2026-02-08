@@ -9,6 +9,11 @@ A browser-based continuous audio-visual installation that maps a 4-hour audio ti
 - **Geographic Mapping**: Audio timeline synced to route visualization on Iceland map
 - **Random Visual Media**: Videos and images play randomly from section-specific pools
 - **Radio-Like Experience**: Always-on stream, not an album or playlist
+- **Visual Aesthetics**: 
+  - Desaturated media (almost grayscale) with high contrast
+  - Animated vertical black bars with blur effects creating a dynamic viewing experience
+  - Monochromatic UI using a curated greyscale palette
+  - Elegant typography with Barlow Condensed font
 
 ## 🏗️ Architecture
 
@@ -53,6 +58,99 @@ Route Mapping System
    - Coordinates all systems
    - Handles initialization sequence
    - Manages user interactions
+
+## 🎨 Visual Design System
+
+### Color Palette
+
+The installation uses a carefully curated greyscale palette:
+
+```css
+/* Color Palette - Coolors */
+--onyx: #0c0e10       /* Deep black - Background */
+--gunmetal: #323535   /* Dark grey - Structural elements */
+--grey: #747978       /* Mid grey - Secondary text */
+--ash-grey: #a8b5b2   /* Light grey - Labels and subtitles */
+--silver: #c3c6c8     /* Lightest grey - Primary text and highlights */
+```
+
+### Visual Effects
+
+#### 1. Animated Black Bars
+- **Four vertical bars** (25% width each) overlay the media display
+- **Dynamic behavior**: Random bars disappear/reappear every 0.3-1.5 seconds
+- **Blur effect**: Active bars have 20-40px backdrop blur creating a "smudge" effect
+- **Opacity**: Active bars vary between 0.9-1.0 opacity
+- **Transparent state**: Fully transparent (opacity 0) when inactive, revealing media beneath
+- Creates a rhythmic, glitchy visual experience
+
+#### 2. Media Desaturation & Contrast
+All videos and images are processed with CSS filters:
+```css
+filter: saturate(0.2) contrast(1.4);
+```
+- **Saturation**: Reduced to 20% for near-grayscale aesthetic
+- **Contrast**: Increased by 40% for dramatic visual impact
+- Maintains cohesion with the monochromatic UI palette
+
+#### 3. Typography
+- **Primary font**: Barlow Condensed (300, 400, 500, 600 weights)
+- **Fallbacks**: 'Helvetica Neue', Helvetica, sans-serif
+- **Google Fonts**: Loaded via CDN for optimal performance
+- **Usage**:
+  - Tune-in overlay title and subtitle
+  - Now Playing information
+  - Volume label
+  - Track metadata
+
+### UI Components
+
+#### Now Playing Bar (Bottom)
+- **Background**: Onyx (#0c0e10) - Deep black base
+- **Height**: 150px on desktop, 140px on mobile
+- **Elements**:
+  - Volume fader (vertical, Silver thumb with Ash Grey progress)
+  - Frequency bars (15 bars, 2px width, gradient from Grey to Silver)
+  - "NOW PLAYING:" label (Grey color, 0.9rem, 3px letter-spacing)
+  - Current section name (Grey color, same size as label)
+  - Track information (Ash Grey, italic, 0.65rem)
+
+#### Map Visualizer (Right Sidebar)
+- **Position**: Right sidebar on desktop (25% width), top on mobile (full width)
+- **Background**: White for contrast with dark UI
+- **Technology**: OpenStreetMap with Leaflet.js
+- **Features**: Route visualization with real-time position tracking
+
+#### Frequency Bars
+- **Count**: 15 bars
+- **Width**: 2px each
+- **Gradient**: From Grey (#747978) to Silver (#c3c6c8)
+- **Animation**: Real-time audio frequency data visualization
+- **Shadow**: Subtle glow effect using Ash Grey (#a8b5b2)
+- **Height**: Dynamic based on audio analysis
+
+#### Black Bars Overlay
+- **Container**: Fixed position, z-index 5 (above media, below UI)
+- **Bars**: 4 columns, 25% width each
+- **Bottom clearance**: 150px (desktop) / 140px (mobile)
+- **Pointer events**: Disabled to allow interaction with underlying elements
+- **Script**: Standalone animation loop in main HTML
+
+### Responsive Design
+
+The layout adapts seamlessly for mobile devices:
+- **Desktop (>1024px)**:
+  - Map: Right sidebar (25% width)
+  - Media: Full screen background
+  - Black bars: Top to 150px from bottom
+  - Controls: Bottom bar (150px height)
+
+- **Mobile (≤1024px)**:
+  - Map: Top horizontal strip (150px height)
+  - Media: Middle section (between top and bottom bars)
+  - Black bars: From 150px top to 140px bottom
+  - Controls: Bottom bar (140px height)
+  - Reduced spacing and padding for compact layout
 
 ## 📁 Project Structure
 
@@ -106,6 +204,13 @@ The project is currently set up with **placeholder data**. Everything works, but
 - Route GPS coordinates
 - Audio file URLs and durations
 - Media pool (video/image) URLs
+
+**Visual system is ready to use:**
+- Greyscale color palette pre-configured
+- Black bars animation system active
+- Media desaturation filters applied
+- Barlow Condensed font loaded from Google Fonts
+- Responsive layout implemented
 
 ### 2. Running Locally
 
@@ -303,29 +408,54 @@ The installation is **mobile-friendly**, but note:
 
 The architecture is designed to be extensible:
 
-### Audio Analysis
+### Audio-Reactive Visuals
 ```javascript
 // Already set up in audio-engine.js
 // Add analyzer node:
 const analyzer = audioContext.createAnalyser();
 source.connect(analyzer);
 
-// Then use FFT data for visualizations
+// Use FFT data to control:
+// - Black bar animation speed/intensity
+// - Media blur intensity
+// - Frequency bar heights (already implemented)
 ```
 
-### Visual Effects
+### Advanced Visual Effects
 ```javascript
-// In media-display.js, add shader effects:
-// - Blur, color grading, etc.
-// - Reactive to audio analysis
+// In media-display.js, add dynamic shader effects:
+// - Audio-reactive blur intensity
+// - Dynamic color grading based on section
+// - Glitch effects synchronized with black bars
+// - Chromatic aberration
+```
+
+### Interactive Black Bars
+```javascript
+// Potential enhancements:
+// - Click to manually trigger bar animations
+// - Audio-reactive blur (louder = more blur)
+// - Section-specific bar behaviors
+// - Gradient colors instead of pure black
 ```
 
 ### User Controls
 ```javascript
 // Optional additions:
-// - Volume slider
-// - Pause/resume (currently always-on)
-// - Manual section navigation (testing only)
+// - Saturation slider (grayscale ↔ full color)
+// - Blur intensity control
+// - Black bars on/off toggle
+// - Animation speed control
+// - Custom color palette picker
+```
+
+### Enhanced Map Visualization
+```javascript
+// Potential improvements:
+// - 3D terrain view (Cesium already included)
+// - Weather overlay synced to footage
+// - Time-of-day lighting
+// - Photo markers at GPS coordinates
 ```
 
 ## 📊 Performance Stats
@@ -341,18 +471,82 @@ source.connect(analyzer);
 
 ### Changing Colors
 
-In `src/components/map-visualizer.js`:
+The entire UI uses the greyscale palette defined in `index.html`. To change the color scheme:
+
+```css
+/* In <style> section of index.html */
+/* Update these color values throughout: */
+--onyx: #0c0e10       /* Background */
+--gunmetal: #323535   /* Structural */
+--grey: #747978       /* Secondary text */
+--ash-grey: #a8b5b2   /* Labels */
+--silver: #c3c6c8     /* Primary text */
+```
+
+### Adjusting Visual Effects
+
+#### Black Bars Animation Speed
+In the `<script>` section of `index.html`:
 ```javascript
-const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24'];
+// Change animation timing (currently 0.3-1.5 seconds)
+const randomDelay = (Math.random() * 1.2 + 0.3) * 1000;
+
+// Adjust blur intensity (currently 20-40px)
+const randomBlur = Math.floor(Math.random() * 21) + 20;
+
+// Adjust opacity range (currently 0.9-1.0)
+const randomOpacity = Math.random() * 0.1 + 0.9;
+```
+
+#### Media Desaturation & Contrast
+In `src/components/media-display.js`:
+```javascript
+// Adjust filter values
+video.style.filter = 'saturate(0.2) contrast(1.4)';
+img.style.filter = 'saturate(0.2) contrast(1.4)';
+
+// Examples:
+// More saturated: saturate(0.5)
+// More contrast: contrast(1.6)
+// Full grayscale: saturate(0) contrast(1.2)
+```
+
+#### Frequency Bars
+In `index.html`:
+```css
+.frequency-bar {
+  width: 2px;  /* Adjust thickness */
+  background: linear-gradient(to top, #747978, #c3c6c8);  /* Change colors */
+}
 ```
 
 ### Changing Map Size
 
 In `index.html`:
 ```css
-#map-container {
-  width: 400px;   /* Adjust as needed */
-  height: 300px;
+#right-sidebar {
+  width: 25%;   /* Desktop map width (25% of screen) */
+}
+
+@media (max-width: 1024px) {
+  #right-sidebar {
+    height: 150px;  /* Mobile map height */
+  }
+}
+```
+
+### Changing Typography
+
+To use a different font, update the Google Fonts import in `index.html`:
+```html
+<!-- Replace Barlow Condensed with your preferred font -->
+<link href="https://fonts.googleapis.com/css2?family=Your+Font+Name:wght@300;400;500;600&display=swap" rel="stylesheet">
+```
+
+Then update the CSS:
+```css
+body {
+  font-family: 'Your Font Name', 'Helvetica Neue', Helvetica, sans-serif;
 }
 ```
 
@@ -360,7 +554,17 @@ In `index.html`:
 
 In `src/components/media-display.js`:
 ```javascript
-this.crossfadeDuration = 1000; // Milliseconds
+this.crossfadeDuration = 1000; // Milliseconds (currently 1 second)
+```
+
+### Adjusting Black Bars Layout
+
+In `index.html`:
+```css
+.black-bar {
+  width: 25%;  /* Change to create different number of bars */
+               /* 33.33% for 3 bars, 20% for 5 bars, etc. */
+}
 ```
 
 ## 📖 API Reference
@@ -409,10 +613,16 @@ For questions or issues:
 ## 🙏 Acknowledgments
 
 Built with:
-- Web Audio API
+- Web Audio API (with frequency analysis)
 - HTML5 Video/Canvas
-- SVG for map visualization
+- CSS backdrop-filter (blur effects)
+- Leaflet.js + OpenStreetMap (route visualization)
+- Google Fonts (Barlow Condensed)
 - Vanilla JavaScript (no frameworks)
+
+**Design Credits:**
+- Color palette: [Coolors.co](https://coolors.co/c3c6c8-a8b5b2-747978-323535-0c0e10)
+- Typography: Barlow Condensed by Jeremy Tribby
 
 ---
 
