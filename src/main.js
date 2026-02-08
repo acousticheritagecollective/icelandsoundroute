@@ -9,7 +9,6 @@ import { routeConfig } from './data/route-config.js';
 import { StateManager } from './systems/state-manager.js';
 import { MediaDisplay } from './components/media-display.js';
 import { MapVisualizer } from './components/map-visualizer.js';
-import { EarthquakeMonitor } from './components/earthquake-monitor.js';
 import { UI } from './components/ui.js';
 
 class RadioInstallation {
@@ -17,7 +16,6 @@ class RadioInstallation {
     this.stateManager = null;
     this.mediaDisplay = null;
     this.mapVisualizer = null;
-    this.earthquakeMonitor = null;
     this.ui = null;
     
     this.isInitialized = false;
@@ -34,10 +32,9 @@ class RadioInstallation {
       // Get DOM containers
       const mediaContainer = document.getElementById('media-container');
       const mapContainer = document.getElementById('map-container');
-      const earthquakeContainer = document.getElementById('earthquake-monitor');
       const uiContainer = document.getElementById('ui-container');
       
-      if (!mediaContainer || !mapContainer || !earthquakeContainer || !uiContainer) {
+      if (!mediaContainer || !mapContainer || !uiContainer) {
         throw new Error('Required DOM containers not found');
       }
       
@@ -52,9 +49,6 @@ class RadioInstallation {
       this.mapVisualizer = new MapVisualizer(mapContainer);
       const routeInfo = this.stateManager.getRouteInfo();
       this.mapVisualizer.loadRoute(routeInfo.sections);
-      
-      // Initialize earthquake monitor
-      this.earthquakeMonitor = new EarthquakeMonitor(earthquakeContainer);
       
       // Initialize media display
       this.mediaDisplay = new MediaDisplay(
@@ -91,8 +85,6 @@ class RadioInstallation {
     if (this.mapVisualizer) {
       this.mapVisualizer.update(context);
     }
-    
-    // Earthquake monitor updates on its own timer, no need to update here
   }
   
   /**

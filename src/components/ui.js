@@ -56,7 +56,7 @@ export class UI {
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.9);
+      background: rgba(0, 0, 0, 0.75);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -67,10 +67,10 @@ export class UI {
     
     // Title
     const title = document.createElement('h1');
-    title.textContent = 'Iceland Radio Installation';
+    title.textContent = 'The Iceland Sonic Route';
     title.style.cssText = `
-      color: white;
-      font-family: 'Helvetica Neue', Arial, sans-serif;
+      color: #E5EBEE;
+      font-family: 'Barlow Condensed', 'Helvetica Neue', Helvetica, sans-serif;
       font-size: 3rem;
       font-weight: 300;
       margin-bottom: 2rem;
@@ -80,11 +80,11 @@ export class UI {
     
     // Subtitle
     const subtitle = document.createElement('p');
-    subtitle.textContent = 'A continuous audio-visual journey across Iceland by Ginebra Raventós, Emilio Marx, Edgardo Gómez and Joan Lavandeira';
+    subtitle.textContent = 'A continuous binaural AV journey across Iceland by Ginebra Raventós, Ɇ₥łⱠłØ ₥₳ⱤӾ, Edgardo Gómez and Joan Lavandeira';
     subtitle.style.cssText = `
-      color: rgba(255, 255, 255, 0.7);
-      font-family: 'Helvetica Neue', Arial, sans-serif;
-      font-size: 1.2rem;
+      color: rgba(232, 241, 242, 0.8);
+      font-family: 'Barlow Condensed', 'Helvetica Neue', Helvetica, sans-serif;
+      font-size: 1.0rem;
       margin-bottom: 3rem;
       text-align: center;
     `;
@@ -97,10 +97,10 @@ export class UI {
     button.style.cssText = `
       padding: 1.5rem 4rem;
       font-size: 1.2rem;
-      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-family: 'Barlow Condensed', 'Helvetica Neue', Helvetica, sans-serif;
       font-weight: 500;
-      color: black;
-      background: white;
+color: rgba(0, 26, 35, 0.8);
+      background: rgba(232, 241, 242, 0.8);
       border: none;
       border-radius: 50px;
       cursor: pointer;
@@ -245,6 +245,11 @@ export class UI {
       const success = await this.stateManager.start();
       
       if (success) {
+        // Start Iceland cameras
+        if (this.icelandCameras) {
+          this.icelandCameras.start();
+        }
+        
         // Fade out overlay
         overlay.style.transition = 'opacity 1s ease';
         overlay.style.opacity = '0';

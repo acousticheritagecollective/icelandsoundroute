@@ -14,7 +14,10 @@ export class MapVisualizer {
     this.routeLayers = [];
     this.positionMarker = null;
     this.currentContext = null;
-    this.pendingRouteData = null; // Store route data if map not ready
+    this.pendingRouteData = null;
+    this.zoomLevel = 0; // 0 = Iceland, 1 = Zone, 2 = Current location
+    this.zoomInterval = null;
+    this.allCoordinates = []; // Store all route coordinates
     
     this.initialize();
   }
@@ -23,33 +26,45 @@ export class MapVisualizer {
    * Initialize Leaflet map
    */
   initialize() {
-    // Wait a moment for DOM to be fully ready
     setTimeout(() => {
       try {
         // Create Leaflet map centered on Iceland
         this.map = L.map(this.container, {
-          zoomControl: true,
-          attributionControl: true
-        }).setView([64.9631, -19.0208], 6); // Iceland center
+          zoomControl: false,
+          attributionControl: false
+        }).setView([64.9631, -19.0208], 6);
         
-        // Add satellite imagery tiles (ESRI World Imagery)
+        // Add satellite imagery tiles
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
           maxZoom: 19,
-          attribution: 'Tiles &copy; Esri'
+          attribution: '',
+          className: 'map-satellite-blend'
         }).addTo(this.map);
         
-        // Force map to recalculate size
+        // Add CSS for blending with background
+        const style = document.createElement('style');
+        style.textContent = `
+          .map-satellite-blend {
+            filter: grayscale(100%) contrast(1.3);
+           mix-blend-mode: screen;
+ //           opacity: 0.5;
+          }
+        `;
+        document.head.appendChild(style);
+        
         setTimeout(() => {
           this.map.invalidateSize();
         }, 100);
         
-        console.log('Map visualizer initialized with satellite imagery');
+        console.log('Map visualizer initialized with desaturated satellite imagery');
         
-        // If route data was already provided, load it now
         if (this.pendingRouteData) {
           this.loadRoute(this.pendingRouteData);
           this.pendingRouteData = null;
         }
+        
+        // Start zoom cycle
+        this.startZoomCycle();
         
       } catch (error) {
         console.error('Error initializing map:', error);
@@ -58,12 +73,49 @@ export class MapVisualizer {
   }
   
   /**
+   * Start the 3-level zoom cycle (every 10 seconds)
+   */
+  startZoomCycle() {
+    this.zoomInterval = setInterval(() => {
+      if (!this.currentContext || !this.map) return;
+      
+      // Get current position from context
+      const lat = this.currentContext.geo?.latitude;
+      const lng = this.currentContext.geo?.longitude;
+      
+      if (!lat || !lng) return;
+      
+      this.zoomLevel = (this.zoomLevel + 1) % 3;
+      
+      switch(this.zoomLevel) {
+        case 0: // Close-up on current position
+          this.map.setView([lat, lng], 14, {
+            animate: true,
+            duration: 2
+          });
+          break;
+        case 1: // Medium zoom on current position
+          this.map.setView([lat, lng], 11, {
+            animate: true,
+            duration: 2
+          });
+          break;
+        case 2: // Far zoom on current position (but not full island)
+          this.map.setView([lat, lng], 9, {
+            animate: true,
+            duration: 2
+          });
+          break;
+      }
+    }, 10000);
+  }
+  
+  /**
    * Load route data and create visualization
    * 
    * @param {Array} sections - Array of section objects from route mapping
    */
   loadRoute(sections) {
-    // If map isn't ready yet, store data for later
     if (!this.map) {
       console.log('Map not ready, storing route data for later');
       this.pendingRouteData = sections;
@@ -72,11 +124,15 @@ export class MapVisualizer {
     
     console.log('Loading route with', sections.length, 'sections');
     
-    const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24'];
+    const colors = ['#ECF1F4', '#E6EBEE', '#F8FAFB', '#F8FAFB'];
+    
+    // Store all coordinates for zone zoom
+    this.allCoordinates = [];
     
     // Create polyline for each section
     sections.forEach((section, index) => {
       const latLngs = section.geoPath.map(([lat, lng]) => [lat, lng]);
+      this.allCoordinates.push(...latLngs);
       
       const polyline = L.polyline(latLngs, {
         color: colors[index % colors.length],
@@ -93,12 +149,12 @@ export class MapVisualizer {
     
     // Create position marker (pulsing circle)
     this.positionMarker = L.circleMarker([64.1466, -21.9426], {
-      radius: 8,
+      radius: 6,
       fillColor: '#ffffff',
       color: '#ffffff',
       weight: 2,
       opacity: 1,
-      fillOpacity: 0.8
+      fillOpacity: 0.6
     }).addTo(this.map);
     
     // Fit map to show all routes
@@ -150,6 +206,9 @@ export class MapVisualizer {
    * Clean up
    */
   destroy() {
+    if (this.zoomInterval) {
+      clearInterval(this.zoomInterval);
+    }
     if (this.map) {
       this.map.remove();
     }

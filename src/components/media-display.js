@@ -145,6 +145,7 @@ export class MediaDisplay {
     video.style.width = '100%';
     video.style.height = '100%';
     video.style.objectFit = 'cover';
+    video.style.filter = 'saturate(0.2) contrast(1.4)';
     video.muted = true; // Videos are visual only, audio comes from audio engine
     video.playsInline = true;
     video.preload = 'auto';
@@ -162,6 +163,7 @@ export class MediaDisplay {
       img.style.width = '100%';
       img.style.height = '100%';
       img.style.objectFit = 'cover';
+      img.style.filter = 'saturate(0.2) contrast(1.4)';
       
       img.onload = () => resolve(img);
       img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
