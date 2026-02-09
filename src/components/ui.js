@@ -67,7 +67,7 @@ export class UI {
     
     // Title
     const title = document.createElement('h1');
-    title.textContent = 'The Iceland Sonic Route';
+    title.textContent = 'OUR ICELAND SONIC ROUTE';
     title.style.cssText = `
       color: #E5EBEE;
       font-family: 'Barlow Condensed', 'Helvetica Neue', Helvetica, sans-serif;
@@ -80,7 +80,7 @@ export class UI {
     
     // Subtitle
     const subtitle = document.createElement('p');
-    subtitle.textContent = 'A continuous binaural AV journey across Iceland by Ginebra Raventós, Ɇ₥łⱠłØ ₥₳ⱤӾ, Edgardo Gómez and Joan Lavandeira';
+    subtitle.textContent = 'A continuous binaural journey across Iceland, recorded in 2025. By Ginebra Raventós, Ɇ₥łⱠłØ ₥₳ⱤӾ, Edgardo Gómez and Joan Lavandeira';
     subtitle.style.cssText = `
       color: rgba(232, 241, 242, 0.8);
       font-family: 'Barlow Condensed', 'Helvetica Neue', Helvetica, sans-serif;
