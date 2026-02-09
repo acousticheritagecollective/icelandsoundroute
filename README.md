@@ -2,7 +2,7 @@
 
 A browser-based continuous audio-visual installation that maps a 4-hour audio timeline to a physical car route across Iceland. Visitors "tune in" at different points in the journey based on time-of-day, creating a unique radio-like experience.
 
-## 🎯 Concept
+## Concept
 
 - **Continuous Audio Timeline**: ~4 hours of audio divided into 4 sequential route sections
 - **Time-of-Day Entry**: Each visitor enters at a different point (24h cycle → 4h audio loop)
@@ -15,7 +15,7 @@ A browser-based continuous audio-visual installation that maps a 4-hour audio ti
   - Monochromatic UI using a curated greyscale palette
   - Elegant typography with Barlow Condensed font
 
-## 🏗️ Architecture
+## Architecture
 
 ### Core Systems
 
@@ -59,7 +59,7 @@ Route Mapping System
    - Handles initialization sequence
    - Manages user interactions
 
-## 🎨 Visual Design System
+## Visual Design System
 
 ### Color Palette
 
@@ -163,7 +163,7 @@ iceland-radio-installation/
 │   ├── main.js                 # Application entry point
 │   │
 │   ├── data/
-│   │   └── route-config.js     # ⭐ YOUR DATA GOES HERE
+│   │   └── route-config.js     #  YOUR DATA GOES HERE
 │   │
 │   ├── systems/
 │   │   ├── timeline-engine.js
@@ -236,7 +236,7 @@ Open browser console to see detailed logs:
 - Media selection and transitions
 - Section changes
 
-## 📝 Adding Your Data
+## Adding Your Data
 
 ### Step 1: Prepare Your Audio Files
 
@@ -328,7 +328,7 @@ In `src/components/ui.js`:
 this.showDebug = true;  // Show debug panel (development only)
 ```
 
-## 🌐 Deployment
+## Deployment
 
 ### Requirements
 
@@ -372,7 +372,7 @@ The installation is **mobile-friendly**, but note:
 - Responsive layout (map repositions on small screens)
 - Touch-friendly UI
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Audio won't play
 
@@ -404,7 +404,7 @@ The installation is **mobile-friendly**, but note:
 - Check that latitudes are ~63-66 for Iceland
 - Check that longitudes are ~-24 to -13 for Iceland
 
-## 🔮 Future Enhancements
+## Future Enhancements
 
 The architecture is designed to be extensible:
 
@@ -467,7 +467,7 @@ source.connect(analyzer);
 - Memory usage: ~200-300 MB
 - CPU usage: Low (plays audio/video natively)
 
-## 🎨 Customization
+## Customization
 
 ### Changing Colors
 
@@ -598,7 +598,7 @@ audio.pause();                  // Pause playback
 audio.resume();                 // Resume playback
 ```
 
-## 🤝 Support
+## Support
 
 For questions or issues:
 1. Check browser console for error messages
@@ -610,7 +610,7 @@ For questions or issues:
 
 [Your license here]
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 Built with:
 - Web Audio API (with frequency analysis)
@@ -626,4 +626,4 @@ Built with:
 
 ---
 
-**Ready to deploy your Iceland Radio Installation!** 🇮🇸 📻 🎨
+**Ready to deploy your Iceland Radio Installation!**
