@@ -78,17 +78,23 @@ export class UI {
     `;
     overlay.appendChild(title);
     
-    // Subtitle
-    const subtitle = document.createElement('p');
-    subtitle.textContent = 'A continuous binaural journey across Iceland, recorded in 2025. By Ginebra Raventós, Ɇ₥łⱠłØ ₥₳ⱤӾ, Edgardo Gómez and Joan Lavandeira';
-    subtitle.style.cssText = `
-      color: rgba(232, 241, 242, 0.8);
-      font-family: 'Barlow Condensed', 'Helvetica Neue', Helvetica, sans-serif;
-      font-size: 1.0rem;
-      margin-bottom: 3rem;
-      text-align: center;
-    `;
-    overlay.appendChild(subtitle);
+// Subtitle
+const subtitle = document.createElement('p');
+subtitle.innerHTML = `
+  <strong>A CONTINUOUS BINAURAL JOURNEY ACROSS ICELAND</strong><br>
+  Recorded in 2025 by Ginebra Raventós, Ɇ₥łⱠłØ ₥₳ⱤӾ, Edgardo Gómez and Joan Lavandeira<br>
+  Mixed and Mastered in HAPTOS SOUNDLAB Berlin - Produced by The Acoustic Heritage Collective
+`;
+subtitle.style.cssText = `
+  color: rgba(232, 241, 242, 0.8);
+  font-family: 'Barlow Condensed', 'Helvetica Neue', Helvetica, sans-serif;
+  font-size: 1.0rem;
+  margin-bottom: 3rem;
+  text-align: center;
+  line-height: 1.4;
+`;
+overlay.appendChild(subtitle);
+
     
     // Tune In button
     const button = document.createElement('button');
