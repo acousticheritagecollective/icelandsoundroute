@@ -1,4 +1,4 @@
-# Iceland Radio Installation
+# OUR ICELAND SONIC ROUTE
 
 A browser-based continuous audio-visual installation that maps a 4-hour audio timeline to a physical car route across Iceland. Visitors "tune in" at different points in the journey based on time-of-day, creating a unique radio-like experience.
 
