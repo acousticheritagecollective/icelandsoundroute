@@ -189,12 +189,13 @@ export class StateManager {
       const trackNumber = context.audio.file.index + 1;
       const sectionNumber = context.section.index + 1;
       const fileName = context.audio.file.url.split('/').pop().replace('.mp3', '');
-      trackEl.textContent = `Track ${trackNumber} of 8 • ${fileName}`;
+      const section = this.routeMapping.getSectionByIndex(context.section.index);
+      const totalTracksInSection = section.audioFiles.length;
+      trackEl.textContent = `Track ${trackNumber} of ${totalTracksInSection} • ${fileName}`;
       
       // Next track info
       if (nextTrackEl) {
         const nextTrackIndex = context.audio.file.index + 1;
-        const totalTracksInSection = 8;
         
         if (nextTrackIndex < totalTracksInSection) {
           // Next track in same section

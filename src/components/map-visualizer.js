@@ -45,7 +45,7 @@ export class MapVisualizer {
         const style = document.createElement('style');
         style.textContent = `
           .map-satellite-blend {
-            filter: grayscale(100%) contrast(1.3);
+            filter: grayscale(20%) contrast(1.3);
            mix-blend-mode: screen;
  //           opacity: 0.5;
           }
