@@ -1,21 +1,23 @@
-# OUR ICELAND SONIC ROUTE
+# Iceland Radio Installation
 
 A browser-based continuous audio-visual installation that maps a 4-hour audio timeline to a physical car route across Iceland. Visitors "tune in" at different points in the journey based on time-of-day, creating a unique radio-like experience.
 
-## Concept
+## 🎯 Concept
 
-- **Continuous Audio Timeline**: ~4 hours of audio divided into 4 sequential route sections
+- **Continuous Audio Timeline**: ~4 hours of audio divided into 4 sequential route sections (20 tracks total: 7+3+4+6)
 - **Time-of-Day Entry**: Each visitor enters at a different point (24h cycle → 4h audio loop)
 - **Geographic Mapping**: Audio timeline synced to route visualization on Iceland map
+- **Elevation Profile**: Real-time elevation visualization of the current section with progress indicator
 - **Random Visual Media**: Videos and images play randomly from section-specific pools
 - **Radio-Like Experience**: Always-on stream, not an album or playlist
 - **Visual Aesthetics**: 
   - Desaturated media (almost grayscale) with high contrast
   - Animated vertical black bars with blur effects creating a dynamic viewing experience
   - Monochromatic UI using a curated greyscale palette
+  - Unified modular bottom bar design
   - Elegant typography with Barlow Condensed font
 
-## Architecture
+## 🏗️ Architecture
 
 ### Core Systems
 
@@ -26,7 +28,8 @@ Route Mapping System
     ↓
     ├─→ Audio Engine (Sequential playback)
     ├─→ Media Controller (Random visual media)
-    └─→ Map Visualizer (Route progress)
+    ├─→ Map Visualizer (Route progress)
+    └─→ Elevation Profile (Section terrain visualization)
 ```
 
 ### System Descriptions
@@ -43,13 +46,13 @@ Route Mapping System
    - Handles geographic interpolation
 
 3. **Audio Engine** (`src/systems/audio-engine.js`)
-   - Sequential playback of ~32 audio files
+   - Sequential playback of 20 audio files across 4 sections
    - Gapless transitions between tracks and sections
-   - Web Audio API integration (for future analysis)
+   - Web Audio API with real-time frequency analysis
    - Lazy preloading of next track
 
 4. **Media Controller** (`src/systems/media-controller.js`)
-   - Random selection from section-specific pools (~50-60 items each)
+   - Random selection from section-specific pools (5 videos + 15 images per section)
    - No-repeat logic (shows all before repeating)
    - Lazy loading (only 2-3 items cached)
    - Crossfade transitions
@@ -58,8 +61,15 @@ Route Mapping System
    - Coordinates all systems
    - Handles initialization sequence
    - Manages user interactions
+   - Dynamic track count display per section
 
-## Visual Design System
+6. **Elevation Profile** (`src/main.js`)
+   - Real elevation data from Open-Meteo API (0–562m range across Iceland)
+   - Canvas-based rendering with normalized height per section
+   - Bright played portion, dim upcoming portion, position dot indicator
+   - Cached per section, redraws on every context update
+
+## 🎨 Visual Design System
 
 ### Color Palette
 
@@ -97,23 +107,36 @@ filter: saturate(0.2) contrast(1.4);
 - **Primary font**: Barlow Condensed (300, 400, 500, 600 weights)
 - **Fallbacks**: 'Helvetica Neue', Helvetica, sans-serif
 - **Google Fonts**: Loaded via CDN for optimal performance
-- **Usage**:
-  - Tune-in overlay title and subtitle
-  - Now Playing information
-  - Volume label
-  - Track metadata
 
 ### UI Components
 
-#### Now Playing Bar (Bottom)
-- **Background**: Onyx (#0c0e10) - Deep black base
-- **Height**: 150px on desktop, 140px on mobile
-- **Elements**:
-  - Volume fader (vertical, Silver thumb with Ash Grey progress)
-  - Frequency bars (15 bars, 2px width, gradient from Grey to Silver)
-  - "NOW PLAYING:" label (Grey color, 0.9rem, 3px letter-spacing)
-  - Current section name (Grey color, same size as label)
-  - Track information (Ash Grey, italic, 0.65rem)
+#### Now Playing Bar (Bottom) — Modular Design
+
+The bottom bar uses a unified module pattern: each module has content above and a small uppercase label below, all sharing the same typography and color language.
+
+- **Background**: Onyx (#0c0e10)
+- **Height**: 120px (desktop), 100px (tablet), 80px (mobile)
+- **Layout**: Flexbox with `align-items: stretch`
+- **Modules** (left to right):
+
+| Module | Content | Label |
+|--------|---------|-------|
+| **VOL** | Vertical slider (3px track, 10px white dot) | `vol` |
+| **SPECTRUM** | 15 frequency bars (2px, gradient #586462→#a8b5b2) | `spectrum` |
+| **NOW PLAYING** | Section name + Track info (flex: 1) | `now playing` |
+| **ELEVATION** | Canvas elevation profile with progress indicator | `elevation` |
+
+- **Label style**: 0.6rem, `#586462`, uppercase, `letter-spacing: 2px`, Barlow Condensed 400
+
+#### Elevation Profile
+- **Data**: Real altitude from geoPath `[lat, lng, altitude_meters]`
+- **Rendering**: Canvas with device pixel ratio scaling
+- **Visual elements**:
+  - Full profile line in dim grey (`rgba(116, 121, 120, 0.3)`)
+  - Played portion in bright white (`rgba(255, 255, 255, 0.7)`)
+  - Subtle gradient fill under played area
+  - Vertical position line + white dot at current position
+- **Fallback**: Uses latitude as proxy if altitude data is absent
 
 #### Map Visualizer (Right Sidebar)
 - **Position**: Right sidebar on desktop (25% width), top on mobile (full width)
@@ -121,49 +144,45 @@ filter: saturate(0.2) contrast(1.4);
 - **Technology**: OpenStreetMap with Leaflet.js
 - **Features**: Route visualization with real-time position tracking
 
-#### Frequency Bars
-- **Count**: 15 bars
-- **Width**: 2px each
-- **Gradient**: From Grey (#747978) to Silver (#c3c6c8)
-- **Animation**: Real-time audio frequency data visualization
-- **Shadow**: Subtle glow effect using Ash Grey (#a8b5b2)
-- **Height**: Dynamic based on audio analysis
-
 #### Black Bars Overlay
 - **Container**: Fixed position, z-index 5 (above media, below UI)
 - **Bars**: 4 columns, 25% width each
-- **Bottom clearance**: 150px (desktop) / 140px (mobile)
+- **Bottom clearance**: 120px (desktop) / 100px (tablet) / 80px (mobile)
 - **Pointer events**: Disabled to allow interaction with underlying elements
-- **Script**: Standalone animation loop in main HTML
 
 ### Responsive Design
 
-The layout adapts seamlessly for mobile devices:
+The layout adapts across three breakpoints:
+
 - **Desktop (>1024px)**:
   - Map: Right sidebar (25% width)
   - Media: Full screen background
-  - Black bars: Top to 150px from bottom
-  - Controls: Bottom bar (150px height)
+  - Bottom bar: 120px with all 4 modules
+  - Black bars: Top to 120px from bottom
 
-- **Mobile (≤1024px)**:
-  - Map: Top horizontal strip (150px height)
-  - Media: Middle section (between top and bottom bars)
-  - Black bars: From 150px top to 140px bottom
-  - Controls: Bottom bar (140px height)
-  - Reduced spacing and padding for compact layout
+- **Tablet (≤1024px)**:
+  - Map: Top horizontal strip (120px height)
+  - Media: Between top and bottom bars
+  - Bottom bar: 100px, spectrum hidden
+  - Black bars: From 120px top to 100px bottom
+
+- **Mobile (≤580px)**:
+  - Map: Top strip (100px height)
+  - Bottom bar: 80px, spectrum + elevation hidden
+  - Only vol and now playing modules visible
 
 ## 📁 Project Structure
 
 ```
 iceland-radio-installation/
-├── index.html                  # Main HTML file
+├── index.html                  # Main HTML + bottom bar + black bars animation
 ├── README.md                   # This file
 │
 ├── src/
-│   ├── main.js                 # Application entry point
+│   ├── main.js                 # App entry + frequency bars + elevation profile
 │   │
 │   ├── data/
-│   │   └── route-config.js     #  YOUR DATA GOES HERE
+│   │   └── route-config.js     # ⭐ Routes, audio, media pools, elevation
 │   │
 │   ├── systems/
 │   │   ├── timeline-engine.js
@@ -180,39 +199,28 @@ iceland-radio-installation/
 │   └── utils/
 │       └── (helper scripts)
 │
-└── public/
-    ├── audio/
-    │   ├── section1/
-    │   ├── section2/
-    │   ├── section3/
-    │   └── section4/
-    │
-    └── media/
-        ├── section1/
-        │   ├── videos/
-        │   └── images/
-        ├── section2/
-        ├── section3/
-        └── section4/
+├── public/
+│   ├── audio/
+│   │   ├── section1/           # 7 tracks (track_01 – track_07)
+│   │   ├── section2/           # 3 tracks (track_08 – track_10)
+│   │   ├── section3/           # 4 tracks (track_11 – track_14)
+│   │   └── section4/           # 6 tracks (track_15 – track_20)
+│   │
+│   └── media/
+│       ├── section1/
+│       │   ├── videos/         # 5 videos per section
+│       │   └── images/         # 15 images per section
+│       ├── section2/
+│       ├── section3/
+│       └── section4/
+│
+└── tools/
+    └── fetch-elevations.py     # Script to get real elevation data
 ```
 
 ## 🚀 Getting Started
 
-### 1. Basic Setup
-
-The project is currently set up with **placeholder data**. Everything works, but you'll need to replace:
-- Route GPS coordinates
-- Audio file URLs and durations
-- Media pool (video/image) URLs
-
-**Visual system is ready to use:**
-- Greyscale color palette pre-configured
-- Black bars animation system active
-- Media desaturation filters applied
-- Barlow Condensed font loaded from Google Fonts
-- Responsive layout implemented
-
-### 2. Running Locally
+### 1. Running Locally
 
 Since the project uses ES6 modules, you need a local server:
 
@@ -228,7 +236,7 @@ npx http-server -p 8000
 
 Then open `http://localhost:8000` in your browser.
 
-### 3. Testing
+### 2. Testing
 
 Open browser console to see detailed logs:
 - Timeline position and sync
@@ -236,69 +244,99 @@ Open browser console to see detailed logs:
 - Media selection and transitions
 - Section changes
 
-## Adding Your Data
+## 📝 Data Configuration
 
-### Step 1: Prepare Your Audio Files
+### Route Config Structure
 
-1. Export your audio tracks as MP3 or AAC files
-2. Organize into 4 sections (approximately 8 tracks per section)
-3. Name consistently: `track_01.mp3`, `track_02.mp3`, etc.
-4. Place in `/public/audio/section1/`, `/section2/`, etc.
+`src/data/route-config.js` contains all data for the 4 sections. Each section has:
 
-### Step 2: Get Audio Durations
+```javascript
+{
+  id: 'section_1',
+  name: 'Reykjavik to Vík',
+  geoPath: [
+    [64.115366, -20.300251, 97.0],  // [lat, lng, altitude_meters]
+    [64.115528, -20.299848, 97.0],
+    // ... thousands of points with real elevation
+  ],
+  audioFiles: [
+    { url: '/iceland/public/audio/section1/track_01.mp3', duration: 934 },
+    // ...
+  ],
+  mediaPool: {
+    videos: ['video_01.mp4', 'video_02.mp4', ...],
+    images: ['image_01.jpg', 'image_02.jpg', ...]
+  }
+}
+```
 
+### Audio Files
+
+The 20 tracks are distributed across 4 sections:
+
+| Section | Tracks | Files |
+|---------|--------|-------|
+| 1: Reykjavik → Vík | 7 | track_01 – track_07 |
+| 2: Vík → Höfn | 3 | track_08 – track_10 |
+| 3: Mývatn → Sauðárkrókur | 4 | track_11 – track_14 |
+| 4: Sauðárkrókur → Reykjavik | 6 | track_15 – track_20 |
+
+Track count per section is fully dynamic — the system reads `section.audioFiles.length` at runtime.
+
+### Optimizing Media for Web
+
+#### Videos (H.264, 1080p, no audio)
 ```bash
-# On Mac/Linux with ffmpeg:
-for file in public/audio/section1/*.mp3; do
-  duration=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$file")
-  echo "$file: ${duration%.*} seconds"
+# Single file
+ffmpeg -i input.mp4 -c:v libx264 -crf 23 -preset slow \
+  -vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2" \
+  -an -movflags +faststart output.mp4
+
+# Batch process folder
+for f in *.mp4; do
+  ffmpeg -i "$f" -c:v libx264 -crf 23 -preset slow \
+    -vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2" \
+    -an -movflags +faststart "opt_${f}"
 done
 ```
 
-### Step 3: Prepare Your Media Files
+Key flags:
+- `-an`: strips audio (videos are muted in the app, saves bandwidth)
+- `-movflags +faststart`: enables progressive playback
+- `-crf 23`: quality/size balance (lower = better, 20–26 range)
 
-1. Collect ~50-60 videos and images per section
-2. Optimize for web:
-   - Videos: H.264 MP4, 720p-1080p, 2-5 Mbps
-   - Images: JPEG or WebP, 1920×1080 max, 100-300 KB
-3. Organize into folders:
-   - `/public/media/section1/videos/`
-   - `/public/media/section1/images/`
-   - etc.
-
-### Step 4: Provide Your GPS Route
-
-**Best option: GPS Track File**
-
-If you recorded your drive with a GPS device or phone app:
-- Export as GPX, KML, or GeoJSON
-- Send me the file
-
-**Alternative: Google Maps Route**
-
-Share a Google Maps link with your route
-
-**Alternative: Waypoints**
-
-List major stops:
-```
-Reykjavik: 64.1466°N, 21.9426°W
-Selfoss: 63.9333°N, 20.9833°W
-Vik: 63.4186°N, 19.0059°W
-Hofn: 64.2539°N, 15.2082°W
+#### Images (JPEG, 1920px width)
+```bash
+for f in *.jpg; do
+  ffmpeg -i "$f" -vf "scale=1920:-1" -q:v 3 "opt_${f}"
+done
 ```
 
-And tell me which waypoints mark section boundaries.
+### Updating Media Pools
 
-### Step 5: Update Configuration
+Only edit `mediaPool.videos` and `mediaPool.images` arrays in `route-config.js`. The system is fully dynamic — `media-controller.js` reads from these arrays at runtime. Add or remove as many as needed.
 
-Edit `src/data/route-config.js`:
+### Elevation Data
 
-1. Replace `geoPath` arrays with your actual GPS coordinates
-2. Replace `audioFiles` arrays with your track URLs and durations
-3. Replace `mediaPool` arrays with your video/image URLs
+The geoPath arrays include real elevation data from Open-Meteo API:
 
-**Or**: Send me your data and I'll create a helper script to generate the config automatically.
+| Section | Elevation Range |
+|---------|----------------|
+| 1 | 0m – 119m |
+| 2 | 0m – 562m |
+| 3 | 0m – 552m |
+| 4 | 0m – 321m |
+
+#### Regenerating Elevation Data
+
+If you change routes, use the included script:
+
+```bash
+# Place route1.json – route4.json in same folder
+python3 fetch-elevations.py
+```
+
+This outputs `geopaths-with-elevation.js` with `[lat, lng, altitude]` arrays ready to paste into `route-config.js`. Uses Open-Meteo API (free, no API key, covers Iceland). No pip install needed — uses only Python 3 standard library.
 
 ## 🔧 Configuration Options
 
@@ -328,154 +366,57 @@ In `src/components/ui.js`:
 this.showDebug = true;  // Show debug panel (development only)
 ```
 
-## Deployment
+## 🌐 Deployment
 
 ### Requirements
 
 - HTTPS required (for Web Audio API and autoplay)
-- Fast CDN recommended (for 200+ media files)
+- Fast CDN recommended (for media files)
 
 ### Recommended Hosting
 
-1. **Netlify** (easiest)
-   - Drag and drop your folder
-   - Automatic HTTPS
-   - Global CDN
-
-2. **Vercel**
-   - Connect to GitHub repo
-   - Automatic deployments
-
-3. **AWS S3 + CloudFront**
-   - More control
-   - Requires setup
+1. **Netlify** (easiest) — Drag and drop, automatic HTTPS, global CDN
+2. **Vercel** — Connect to GitHub, automatic deployments
+3. **AWS S3 + CloudFront** — More control, requires setup
 
 ### Optimization Checklist
 
-- [ ] Compress images (TinyPNG, ImageOptim)
-- [ ] Compress videos (HandBrake, ffmpeg)
+- [ ] Optimize videos with ffmpeg (`-an -movflags +faststart -crf 23`)
+- [ ] Optimize images with ffmpeg (`-vf scale=1920:-1 -q:v 3`)
 - [ ] Test on mobile devices
 - [ ] Test on slow connections
 - [ ] Enable gzip/brotli compression
 - [ ] Set cache headers for media files
 
-## 📱 Mobile Considerations
-
-The installation is **mobile-friendly**, but note:
-
-- Large media files may take time to load on cellular
-- Users on metered connections may see loading delays
-- Consider adding quality settings (HD/SD) in future
-
-**Current mobile optimizations:**
-- Lazy loading (only loads 2-3 media items at a time)
-- Responsive layout (map repositions on small screens)
-- Touch-friendly UI
-
-## Troubleshooting
+## 🐛 Troubleshooting
 
 ### Audio won't play
-
 **Cause**: Autoplay policy requires user interaction
-
 **Solution**: User must click "Tune In" button (already implemented)
 
 ### Audio/video drift over time
-
 **Cause**: Browser throttling or network issues
-
 **Solution**: System auto-resyncs every 5 seconds (already implemented)
 
 ### Media won't load
-
 **Cause**: CORS restrictions or incorrect file paths
-
-**Solution**: 
-- Ensure all files are served from same domain
-- Check browser console for 404 errors
-- Verify file paths in `route-config.js`
+**Solution**: Ensure all files are served from same domain. Check console for 404s. Verify paths in `route-config.js`.
 
 ### Map doesn't show route
-
 **Cause**: GPS coordinates incorrect or out of bounds
+**Solution**: Verify coordinates are `[latitude, longitude]` or `[latitude, longitude, altitude]` format. Latitudes ~63–66 for Iceland, longitudes ~-24 to -13.
 
-**Solution**: 
-- Verify coordinates are `[latitude, longitude]` format
-- Check that latitudes are ~63-66 for Iceland
-- Check that longitudes are ~-24 to -13 for Iceland
+### Elevation profile flat or missing
+**Cause**: geoPath has only `[lat, lng]` without altitude
+**Solution**: Run `fetch-elevations.py` to add real elevation data. The system falls back to latitude as visual proxy if no altitude is present.
 
-## Future Enhancements
-
-The architecture is designed to be extensible:
-
-### Audio-Reactive Visuals
-```javascript
-// Already set up in audio-engine.js
-// Add analyzer node:
-const analyzer = audioContext.createAnalyser();
-source.connect(analyzer);
-
-// Use FFT data to control:
-// - Black bar animation speed/intensity
-// - Media blur intensity
-// - Frequency bar heights (already implemented)
-```
-
-### Advanced Visual Effects
-```javascript
-// In media-display.js, add dynamic shader effects:
-// - Audio-reactive blur intensity
-// - Dynamic color grading based on section
-// - Glitch effects synchronized with black bars
-// - Chromatic aberration
-```
-
-### Interactive Black Bars
-```javascript
-// Potential enhancements:
-// - Click to manually trigger bar animations
-// - Audio-reactive blur (louder = more blur)
-// - Section-specific bar behaviors
-// - Gradient colors instead of pure black
-```
-
-### User Controls
-```javascript
-// Optional additions:
-// - Saturation slider (grayscale ↔ full color)
-// - Blur intensity control
-// - Black bars on/off toggle
-// - Animation speed control
-// - Custom color palette picker
-```
-
-### Enhanced Map Visualization
-```javascript
-// Potential improvements:
-// - 3D terrain view (Cesium already included)
-// - Weather overlay synced to footage
-// - Time-of-day lighting
-// - Photo markers at GPS coordinates
-```
-
-## 📊 Performance Stats
-
-**Current setup (placeholder data):**
-- Total duration: ~5 hours 20 minutes
-- Total files: 32 audio + 200 media = 232 files
-- Bandwidth per user: ~500 MB - 1 GB for full experience
-- Memory usage: ~200-300 MB
-- CPU usage: Low (plays audio/video natively)
-
-## Customization
+## 🎨 Customization
 
 ### Changing Colors
 
-The entire UI uses the greyscale palette defined in `index.html`. To change the color scheme:
+The entire UI uses the greyscale palette defined in `index.html`:
 
 ```css
-/* In <style> section of index.html */
-/* Update these color values throughout: */
 --onyx: #0c0e10       /* Background */
 --gunmetal: #323535   /* Structural */
 --grey: #747978       /* Secondary text */
@@ -488,65 +429,25 @@ The entire UI uses the greyscale palette defined in `index.html`. To change the 
 #### Black Bars Animation Speed
 In the `<script>` section of `index.html`:
 ```javascript
-// Change animation timing (currently 0.3-1.5 seconds)
-const randomDelay = (Math.random() * 1.2 + 0.3) * 1000;
-
-// Adjust blur intensity (currently 20-40px)
-const randomBlur = Math.floor(Math.random() * 21) + 20;
-
-// Adjust opacity range (currently 0.9-1.0)
-const randomOpacity = Math.random() * 0.1 + 0.9;
+const randomDelay = (Math.random() * 1.2 + 0.3) * 1000; // 0.3-1.5s
+const randomBlur = Math.floor(Math.random() * 21) + 20;  // 20-40px
+const randomOpacity = Math.random() * 0.1 + 0.9;         // 0.9-1.0
 ```
 
 #### Media Desaturation & Contrast
 In `src/components/media-display.js`:
 ```javascript
-// Adjust filter values
 video.style.filter = 'saturate(0.2) contrast(1.4)';
-img.style.filter = 'saturate(0.2) contrast(1.4)';
-
-// Examples:
 // More saturated: saturate(0.5)
-// More contrast: contrast(1.6)
 // Full grayscale: saturate(0) contrast(1.2)
-```
-
-#### Frequency Bars
-In `index.html`:
-```css
-.frequency-bar {
-  width: 2px;  /* Adjust thickness */
-  background: linear-gradient(to top, #747978, #c3c6c8);  /* Change colors */
-}
 ```
 
 ### Changing Map Size
 
-In `index.html`:
 ```css
-#right-sidebar {
-  width: 25%;   /* Desktop map width (25% of screen) */
-}
-
+#right-sidebar { width: 25%; }              /* Desktop */
 @media (max-width: 1024px) {
-  #right-sidebar {
-    height: 150px;  /* Mobile map height */
-  }
-}
-```
-
-### Changing Typography
-
-To use a different font, update the Google Fonts import in `index.html`:
-```html
-<!-- Replace Barlow Condensed with your preferred font -->
-<link href="https://fonts.googleapis.com/css2?family=Your+Font+Name:wght@300;400;500;600&display=swap" rel="stylesheet">
-```
-
-Then update the CSS:
-```css
-body {
-  font-family: 'Your Font Name', 'Helvetica Neue', Helvetica, sans-serif;
+  #right-sidebar { height: 120px; }         /* Tablet */
 }
 ```
 
@@ -554,18 +455,18 @@ body {
 
 In `src/components/media-display.js`:
 ```javascript
-this.crossfadeDuration = 1000; // Milliseconds (currently 1 second)
+this.crossfadeDuration = 1000; // Milliseconds
 ```
 
-### Adjusting Black Bars Layout
+## 📊 Performance Stats
 
-In `index.html`:
-```css
-.black-bar {
-  width: 25%;  /* Change to create different number of bars */
-               /* 33.33% for 3 bars, 20% for 5 bars, etc. */
-}
-```
+- Total audio duration: ~4 hours
+- Total files: 20 audio + 80 media (20 videos + 60 images) = 100 files
+- Audio tracks: 20 (7 + 3 + 4 + 6)
+- GeoPath points: 16,325 (with real elevation data)
+- Bandwidth per user: ~300–600 MB for full experience
+- Memory usage: ~200–300 MB
+- CPU usage: Low (plays audio/video natively)
 
 ## 📖 API Reference
 
@@ -573,50 +474,49 @@ In `index.html`:
 
 ```javascript
 const state = stateManager.getState();
-// Returns: {
-//   isPlaying: boolean,
-//   currentContext: object,
-//   timeline: object,
-//   audio: object,
-//   media: object
-// }
+// Returns: { isPlaying, currentContext, timeline, audio, media }
 ```
 
 ### Timeline Engine
 
 ```javascript
-timeline.seekTo(position);     // Seek to specific second
-timeline.resync();              // Force resync to time-of-day
-timeline.getDiagnostics();      // Get debug info
+timeline.seekTo(position);      // Seek to specific second
+timeline.resync();               // Force resync to time-of-day
+timeline.getDiagnostics();       // Get debug info
 ```
 
 ### Audio Engine
 
 ```javascript
-audio.setVolume(0.5);          // Set volume (0-1)
-audio.pause();                  // Pause playback
-audio.resume();                 // Resume playback
+audio.setVolume(0.5);           // Set volume (0-1)
+audio.pause();                   // Pause playback
+audio.resume();                  // Resume playback
 ```
 
-## Support
+## 🔮 Future Enhancements
 
-For questions or issues:
+- Audio-reactive visuals (analyzer already set up)
+- Dynamic shader effects and color grading
+- Interactive black bars (click to trigger, audio-reactive blur)
+- 3D terrain view (Cesium already included)
+- Weather overlay synced to footage
+- Quality settings (HD/SD) for mobile
+
+## 🤝 Support
+
 1. Check browser console for error messages
 2. Verify all file paths in `route-config.js`
 3. Test with a simple 1-section configuration first
 4. Check network tab for failed file loads
 
-## 📄 License
-
-[Your license here]
-
-## Acknowledgments
+## 🙏 Acknowledgments
 
 Built with:
 - Web Audio API (with frequency analysis)
 - HTML5 Video/Canvas
 - CSS backdrop-filter (blur effects)
 - Leaflet.js + OpenStreetMap (route visualization)
+- Open-Meteo Elevation API (terrain data)
 - Google Fonts (Barlow Condensed)
 - Vanilla JavaScript (no frameworks)
 
@@ -626,4 +526,5 @@ Built with:
 
 ---
 
-**Ready to deploy your Iceland Radio Installation!**
+**Iceland Radio Installation** 🇮🇸 📻 🎨
+*A continuous audio-visual journey by Ginebra Raventós, Emilio Marx, Edgardo Gómez and Joan Lavandeira*
