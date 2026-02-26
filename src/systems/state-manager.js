@@ -183,7 +183,7 @@ export class StateManager {
     
     if (sectionEl && trackEl) {
       // Current section name
-      sectionEl.textContent = `Now Playing: ${context.section.name}`;
+      sectionEl.textContent = context.section.name;
       
       // Current track info
       const trackNumber = context.audio.file.index + 1;
