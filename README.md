@@ -2,6 +2,9 @@
 
 A browser-based continuous audio-visual installation that maps a 4-hour audio timeline to a physical car route across Iceland. Visitors "tune in" at different points in the journey based on time-of-day, creating a unique radio-like experience.
 
+<img width="3024" height="1607" alt="capture01" src="https://github.com/user-attachments/assets/c94d87af-c743-4fd6-90c0-a63eb20a18e0" />
+
+
 ## 🎯 Concept
 
 - **Continuous Audio Timeline**: ~4 hours of audio divided into 4 sequential route sections (20 tracks total: 7+3+4+6)
@@ -16,6 +19,10 @@ A browser-based continuous audio-visual installation that maps a 4-hour audio ti
   - Monochromatic UI using a curated greyscale palette
   - Unified modular bottom bar design
   - Elegant typography with Barlow Condensed font
+
+<img width="1512" height="805" alt="capture03" src="https://github.com/user-attachments/assets/3e9a5f95-31ec-400d-9484-3a0080b2fd0d" />
+<img width="1512" height="805" alt="capture02" src="https://github.com/user-attachments/assets/20108c5e-d08d-4ec9-a523-0a3c13f97063" />
+
 
 ## 🏗️ Architecture
 
