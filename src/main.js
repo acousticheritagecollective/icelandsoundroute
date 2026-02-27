@@ -132,9 +132,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const freqData = app.stateManager.audioEngine.getFrequencyData();
       
       if (freqData) {
-        // Update each bar with real frequency data
         bars.forEach((bar, i) => {
-          // Map frequency data (0-255) to height (5-40px)
           const value = freqData[i] || 0;
           const height = (value / 255) * 35 + 5;
           bar.style.height = `${height}px`;
@@ -153,19 +151,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   const elevationCtx = elevationCanvas ? elevationCanvas.getContext('2d') : null;
   const elevationLabel = document.getElementById('elevation-section-label');
   let cachedSectionId = null;
-  let cachedProfile = null; // { points: [{x, y}], minElev, maxElev }
+  let cachedProfile = null;
   
   function buildElevationProfile(geoPath) {
     if (!geoPath || geoPath.length < 2) return null;
     
-    // Use real altitude (index 2) if available, otherwise fallback to latitude
     const hasAltitude = geoPath[0].length >= 3;
     const elevations = geoPath.map(p => hasAltitude ? p[2] : p[0]);
     const minElev = Math.min(...elevations);
     const maxElev = Math.max(...elevations);
     const range = maxElev - minElev || 1;
     
-    // Compute cumulative distance along path for proper X spacing
     const distances = [0];
     for (let i = 1; i < geoPath.length; i++) {
       const [lat1, lng1] = geoPath[i - 1];
@@ -177,18 +173,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     const totalDist = distances[distances.length - 1] || 1;
     
-    // Sample ~200 points max for smooth rendering
     const maxPoints = 200;
     const step = Math.max(1, Math.floor(geoPath.length / maxPoints));
     const points = [];
     
     for (let i = 0; i < geoPath.length; i += step) {
       points.push({
-        x: distances[i] / totalDist,           // 0-1 normalized X
-        y: 1 - (elevations[i] - minElev) / range      // 0-1 normalized Y (inverted for canvas)
+        x: distances[i] / totalDist,
+        y: 1 - (elevations[i] - minElev) / range
       });
     }
-    // Always include last point
     const lastIdx = geoPath.length - 1;
     if (points[points.length - 1].x < 1) {
       points.push({
@@ -207,7 +201,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
     
-    // Set canvas resolution to match display size
     if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr) {
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
@@ -225,18 +218,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     if (points.length < 2) return;
     
-    // Helper: get canvas coords
     const cx = (p) => p.x * w;
     const cy = (p) => padTop + p.y * drawH;
     
-    // --- Draw filled area up to current progress (subtle) ---
+    // Filled area up to progress
     elevationCtx.beginPath();
     elevationCtx.moveTo(cx(points[0]), h);
     elevationCtx.lineTo(cx(points[0]), cy(points[0]));
     
     for (let i = 1; i < points.length; i++) {
       if (points[i].x > progress) {
-        // Interpolate to exact progress point
         const prev = points[i - 1];
         const curr = points[i];
         const t = (progress - prev.x) / (curr.x - prev.x);
@@ -256,7 +247,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     elevationCtx.fillStyle = grad;
     elevationCtx.fill();
     
-    // --- Draw full profile line (dim, ahead of position) ---
+    // Full profile line (dim)
     elevationCtx.beginPath();
     elevationCtx.moveTo(cx(points[0]), cy(points[0]));
     for (let i = 1; i < points.length; i++) {
@@ -266,7 +257,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     elevationCtx.lineWidth = 1;
     elevationCtx.stroke();
     
-    // --- Draw played portion (bright) ---
+    // Played portion (bright)
     elevationCtx.beginPath();
     elevationCtx.moveTo(cx(points[0]), cy(points[0]));
     
@@ -288,10 +279,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     elevationCtx.lineWidth = 1.5;
     elevationCtx.stroke();
     
-    // --- Position indicator: vertical line + dot ---
+    // Position indicator
     const posX = progress * w;
     
-    // Vertical line
     elevationCtx.beginPath();
     elevationCtx.moveTo(posX, padTop);
     elevationCtx.lineTo(posX, h - padBottom);
@@ -299,7 +289,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     elevationCtx.lineWidth = 1;
     elevationCtx.stroke();
     
-    // Dot
     elevationCtx.beginPath();
     elevationCtx.arc(posX, posY, 3, 0, Math.PI * 2);
     elevationCtx.fillStyle = '#ffffff';
@@ -318,13 +307,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     if (!context) return;
     
-    // Rebuild profile if section changed
     if (context.section.id !== cachedSectionId) {
       cachedSectionId = context.section.id;
       cachedProfile = buildElevationProfile(context.geo.path);
     }
     
-    // Draw with current progress
     drawElevationProfile(context.section.progressInSection);
   };
   
@@ -332,7 +319,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const volumeSlider = document.getElementById('volume-slider');
   if (volumeSlider && app.stateManager?.audioEngine) {
     volumeSlider.addEventListener('input', (e) => {
-      const volume = e.target.value / 100; // Convert 0-100 to 0-1
+      const volume = e.target.value / 100;
       if (app.stateManager.audioEngine.masterGainNode) {
         app.stateManager.audioEngine.masterGainNode.gain.value = volume;
       }
@@ -340,17 +327,53 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-// Handle page visibility changes (pause when tab hidden, resume when visible)
+// ======================================================================
+// TAB VISIBILITY HANDLING
+// 
+// PRINCIPLE: This is a radio — audio NEVER stops.
+// Only visual media (videos/images) pauses when tab hidden and
+// resumes with fresh content when tab becomes visible again.
+// No "Tune In" screen, no restart, no interruption.
+// ======================================================================
 document.addEventListener('visibilitychange', () => {
-  if (window.radioInstallation?.stateManager) {
-    if (document.hidden) {
-      console.log('Tab hidden, pausing...');
-      // Note: We don't pause timeline - it continues in background
-      // This maintains sync with time-of-day
-    } else {
-      console.log('Tab visible, checking sync...');
-      // Timeline will auto-resync on next sync check
-      window.radioInstallation.stateManager.timelineEngine?.resync();
+  const app = window.radioInstallation;
+  if (!app?.stateManager?.isPlaying) return;
+  
+  if (document.hidden) {
+    // --- TAB HIDDEN ---
+    console.log('[Visibility] Tab hidden — pausing visual media only');
+    
+    // 1. Pause media controller (stops image timers and media cycling)
+    if (app.stateManager.mediaController) {
+      app.stateManager.mediaController.pause();
+    }
+    
+    // 2. Pause video elements to free GPU/memory (videos only, not audio)
+    if (app.mediaDisplay) {
+      app.mediaDisplay.pauseVideos();
+    }
+    
+    // Audio engine + timeline engine: UNTOUCHED — music keeps playing
+    
+  } else {
+    // --- TAB VISIBLE AGAIN ---
+    console.log('[Visibility] Tab visible — resuming visual media');
+    
+    // 1. Resync timeline to correct any drift accumulated while hidden
+    if (app.stateManager.timelineEngine) {
+      app.stateManager.timelineEngine.resync();
+    }
+    
+    // 2. Resume AudioContext if browser auto-suspended it
+    if (app.stateManager.audioEngine?.audioContext?.state === 'suspended') {
+      app.stateManager.audioEngine.audioContext.resume().then(() => {
+        console.log('[Visibility] AudioContext resumed');
+      });
+    }
+    
+    // 3. Resume media controller — loads a fresh video/image immediately
+    if (app.stateManager.mediaController) {
+      app.stateManager.mediaController.resume();
     }
   }
 });

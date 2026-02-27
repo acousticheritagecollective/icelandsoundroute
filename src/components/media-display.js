@@ -9,6 +9,8 @@
  * - Support for both video and image
  * - Responsive sizing (cover mode)
  * - Event handling for media end
+ * - Error recovery: skips broken media, retries on failure
+ * - Tab visibility: pauses videos when hidden, recovers when visible
  */
 
 export class MediaDisplay {
@@ -23,6 +25,10 @@ export class MediaDisplay {
     // Settings
     this.crossfadeDuration = 1000; // 1 second
     
+    // Error tracking
+    this.consecutiveErrors = 0;
+    this.maxConsecutiveErrors = 3;
+    
     this.initialize();
     this.wireMediaController();
   }
@@ -31,14 +37,12 @@ export class MediaDisplay {
    * Initialize display layers
    */
   initialize() {
-    // Create two layers for crossfading
     this.currentLayer = this.createLayer('current');
     this.nextLayer = this.createLayer('next');
     
     this.container.appendChild(this.currentLayer.element);
     this.container.appendChild(this.nextLayer.element);
     
-    // Initially show current layer
     this.currentLayer.element.style.opacity = '1';
     this.nextLayer.element.style.opacity = '0';
   }
@@ -51,7 +55,6 @@ export class MediaDisplay {
     element.className = 'media-layer';
     element.id = `media-layer-${id}`;
     
-    // Styling
     element.style.position = 'absolute';
     element.style.top = '0';
     element.style.left = '0';
@@ -81,37 +84,77 @@ export class MediaDisplay {
   }
   
   /**
+   * Pause all video elements (called when tab goes hidden)
+   */
+  pauseVideos() {
+    [this.currentLayer, this.nextLayer].forEach(layer => {
+      if (layer.mediaElement?.tagName === 'VIDEO') {
+        try { layer.mediaElement.pause(); } catch (e) { /* ignore */ }
+      }
+    });
+  }
+  
+  /**
+   * Clean up a layer's video element properly to free resources
+   */
+  cleanupLayerVideo(layer) {
+    if (layer.mediaElement?.tagName === 'VIDEO') {
+      try {
+        layer.mediaElement.pause();
+        layer.mediaElement.removeAttribute('src');
+        layer.mediaElement.load(); // forces resource release
+      } catch (e) { /* ignore */ }
+    }
+  }
+  
+  /**
    * Display new media item with crossfade
    */
   async displayMedia(mediaItem) {
     console.log('MediaDisplay: Showing', mediaItem.type, mediaItem.url);
     
-    // Create media element based on type
+    // Create media element
     let mediaElement;
-    if (mediaItem.type === 'video') {
-      mediaElement = await this.createVideoElement(mediaItem.url);
-    } else {
-      mediaElement = await this.createImageElement(mediaItem.url);
-    }
-    
-    // Determine which layer to use (swap between current and next)
-    const targetLayer = this.currentLayer.element.style.opacity === '1' 
-      ? this.nextLayer 
-      : this.currentLayer;
-    
-    const oldLayer = targetLayer === this.currentLayer 
-      ? this.nextLayer 
-      : this.currentLayer;
-    
-    // Clear old content from target layer
-    if (targetLayer.mediaElement) {
-      if (targetLayer.mediaElement.tagName === 'VIDEO') {
-        targetLayer.mediaElement.pause();
+    try {
+      if (mediaItem.type === 'video') {
+        mediaElement = await this.createVideoElement(mediaItem.url);
+      } else {
+        mediaElement = await this.createImageElement(mediaItem.url);
       }
-      targetLayer.element.innerHTML = '';
+      // Success — reset error counter
+      this.consecutiveErrors = 0;
+    } catch (error) {
+      console.warn('MediaDisplay: Failed to load media, skipping:', error.message);
+      this.consecutiveErrors++;
+      
+      if (this.consecutiveErrors < this.maxConsecutiveErrors) {
+        // Skip to next after short delay
+        setTimeout(() => this.mediaController.transitionToNext(), 500);
+      } else {
+        // Too many errors, wait longer then retry
+        console.warn('MediaDisplay: Multiple failures, waiting 5s before retry');
+        setTimeout(() => {
+          this.consecutiveErrors = 0;
+          this.mediaController.transitionToNext();
+        }, 5000);
+      }
+      return;
     }
     
-    // Add new media to target layer
+    // Determine which layer to swap into
+    const targetLayer = this.currentLayer.element.style.opacity === '1'
+      ? this.nextLayer
+      : this.currentLayer;
+    
+    const oldLayer = targetLayer === this.currentLayer
+      ? this.nextLayer
+      : this.currentLayer;
+    
+    // Clean up target layer
+    this.cleanupLayerVideo(targetLayer);
+    targetLayer.element.innerHTML = '';
+    
+    // Place new media
     targetLayer.element.appendChild(mediaElement);
     targetLayer.mediaElement = mediaElement;
     targetLayer.currentMedia = mediaItem;
@@ -119,54 +162,107 @@ export class MediaDisplay {
     // Crossfade
     await this.crossfade(oldLayer.element, targetLayer.element);
     
-    // Set up event handlers
+    // Clean up old layer video after crossfade
+    this.cleanupLayerVideo(oldLayer);
+    
+    // Start video playback + wire events
     if (mediaItem.type === 'video') {
+      // Wire ended → next
       mediaElement.addEventListener('ended', () => {
         this.onMediaEnded();
       });
       
-      // Start playing
+      // Wire error during playback → skip to next
+      mediaElement.addEventListener('error', () => {
+        console.warn('MediaDisplay: Video playback error, skipping to next');
+        this.mediaController.transitionToNext();
+      });
+      
       try {
         await mediaElement.play();
       } catch (error) {
-        console.error('Error playing video:', error);
+        console.warn('MediaDisplay: play() rejected, skipping:', error.message);
+        setTimeout(() => this.mediaController.transitionToNext(), 500);
       }
-    } else {
-      // Image - will auto-transition after duration (handled by media controller)
     }
   }
   
   /**
-   * Create video element
+   * Create video element with load validation
    */
   async createVideoElement(url) {
-    const video = document.createElement('video');
-    video.src = url;
-    video.style.width = '100%';
-    video.style.height = '100%';
-    video.style.objectFit = 'cover';
-    video.style.filter = 'saturate(1) contrast(1)';
-    video.muted = true; // Videos are visual only, audio comes from audio engine
-    video.playsInline = true;
-    video.preload = 'auto';
-    
-    return video;
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.style.width = '100%';
+      video.style.height = '100%';
+      video.style.objectFit = 'cover';
+      video.muted = true;
+      video.playsInline = true;
+      video.preload = 'auto';
+      video.crossOrigin = 'anonymous';
+      video.style.filter = 'saturate(1.4) contrast(1.1)';
+      
+      let settled = false;
+      
+      const onCanPlay = () => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve(video);
+      };
+      
+      const onError = () => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(new Error(`Failed to load video: ${url}`));
+      };
+      
+      const cleanup = () => {
+        video.removeEventListener('canplay', onCanPlay);
+        video.removeEventListener('error', onError);
+        clearTimeout(timeout);
+      };
+      
+      // Timeout: if video hasn't loaded in 10s, try to resolve anyway
+      const timeout = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve(video);
+      }, 10000);
+      
+      video.addEventListener('canplay', onCanPlay);
+      video.addEventListener('error', onError);
+      video.src = url;
+    });
   }
   
   /**
-   * Create image element
+   * Create image element with load validation
    */
   async createImageElement(url) {
     return new Promise((resolve, reject) => {
       const img = document.createElement('img');
-      img.src = url;
       img.style.width = '100%';
       img.style.height = '100%';
       img.style.objectFit = 'cover';
-      img.style.filter = 'saturate(1) contrast(1)';
+      img.style.filter = 'saturate(1.4) contrast(1.1)';
       
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+      const timeout = setTimeout(() => {
+        reject(new Error(`Timeout loading image: ${url}`));
+      }, 10000);
+      
+      img.onload = () => {
+        clearTimeout(timeout);
+        resolve(img);
+      };
+      img.onerror = () => {
+        clearTimeout(timeout);
+        reject(new Error(`Failed to load image: ${url}`));
+      };
+      
+      img.src = url;
     });
   }
   
@@ -175,14 +271,9 @@ export class MediaDisplay {
    */
   async crossfade(fadeOut, fadeIn) {
     return new Promise((resolve) => {
-      // Start fade
       fadeOut.style.opacity = '0';
       fadeIn.style.opacity = '1';
-      
-      // Wait for transition to complete
-      setTimeout(() => {
-        resolve();
-      }, this.crossfadeDuration);
+      setTimeout(resolve, this.crossfadeDuration);
     });
   }
   
@@ -200,7 +291,8 @@ export class MediaDisplay {
   getState() {
     return {
       currentLayer: this.currentLayer.currentMedia,
-      nextLayer: this.nextLayer.currentMedia
+      nextLayer: this.nextLayer.currentMedia,
+      consecutiveErrors: this.consecutiveErrors
     };
   }
   
@@ -208,13 +300,9 @@ export class MediaDisplay {
    * Clean up
    */
   destroy() {
-    if (this.currentLayer.mediaElement?.tagName === 'VIDEO') {
-      this.currentLayer.mediaElement.pause();
-    }
-    if (this.nextLayer.mediaElement?.tagName === 'VIDEO') {
-      this.nextLayer.mediaElement.pause();
-    }
-    
+    [this.currentLayer, this.nextLayer].forEach(layer => {
+      this.cleanupLayerVideo(layer);
+    });
     this.container.innerHTML = '';
   }
 }
