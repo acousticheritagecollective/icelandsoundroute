@@ -313,10 +313,55 @@ Key flags:
 - `-crf 23`: quality/size balance (lower = better, 20–26 range)
 
 #### Images (JPEG, 1920px width)
-```bash
-for f in *.jpg; do
-  ffmpeg -i "$f" -vf "scale=1920:-1" -q:v 3 "opt_${f}"
+```bash <<'EOF'
+# 1. Recoger las fotos (jpg, jpeg, png, heic; mayúsculas o minúsculas)
+fotos=()
+for f in *; do
+  [ -f "$f" ] || continue
+  case "$f" in opt_*|tmp_rename_*) continue ;; esac
+  ext=$(printf '%s' "${f##*.}" | tr '[:upper:]' '[:lower:]')
+  case "$ext" in jpg|jpeg|png|heic) fotos+=("$f") ;; esac
 done
+
+total=${#fotos[@]}
+if [ "$total" -eq 0 ]; then echo "No hay fotos en esta carpeta"; exit 1; fi
+ancho=${#total}; [ "$ancho" -lt 2 ] && ancho=2
+
+# 2. Renombrar a image_01, image_02... conservando la extensión
+i=0
+for f in "${fotos[@]}"; do
+  i=$((i + 1))
+  ext=$(printf '%s' "${f##*.}" | tr '[:upper:]' '[:lower:]')
+  [ "$ext" = jpeg ] && ext=jpg
+  mv -- "$f" "$(printf 'tmp_rename_%0*d.%s' "$ancho" "$i" "$ext")"
+done
+for f in tmp_rename_*; do mv -- "$f" "image_${f#tmp_rename_}"; done
+echo "Renombradas $total fotos"
+
+# 3. Optimizar y guardar en la subcarpeta "optimizadas"
+mkdir -p optimizadas
+tmpdir=$(mktemp -d)
+
+for f in image_*; do
+  base="${f%.*}"; ext="${f##*.}"; entrada="$f"
+  case "$ext" in
+    jpg|png) ;;
+    heic)
+      entrada="$tmpdir/$base.jpg"
+      if command -v heif-convert >/dev/null; then heif-convert -q 100 "$f" "$entrada" >/dev/null </dev/null
+      elif command -v magick >/dev/null; then magick "$f" -quality 100 "$entrada" </dev/null
+      elif command -v sips >/dev/null; then sips -s format jpeg "$f" --out "$entrada" >/dev/null </dev/null
+      else echo "Falta heif-convert o ImageMagick para convertir $f"; continue; fi
+      [ -f "$entrada" ] || { echo "No se pudo convertir $f"; continue; } ;;
+    *) continue ;;
+  esac
+  ffmpeg -nostdin -y -loglevel error -i "$entrada" -vf "scale=1920:-1" -q:v 3 "optimizadas/${base}.jpg" \
+    && echo "OK  $f"
+done
+
+rm -rf "$tmpdir"
+echo "Listo: fotos optimizadas en la carpeta 'optimizadas'"
+EOF
 ```
 
 ### Updating Media Pools
