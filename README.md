@@ -407,6 +407,64 @@ echo "Listo: fotos optimizadas en la carpeta 'optimizadas'"
 EOF
 ```
 
+### Stop Motion process for a folder of images
+
+```bash <<'EOF'
+fps=10                 # fotos por segundo
+W=1920; H=1080         # tamaño del vídeo
+salida="stopmotion_$(basename "$PWD").mp4"
+
+# 1. Recoger las fotos en orden alfabético (jpg, jpeg, png, heic)
+fotos=()
+for f in *; do
+  [ -f "$f" ] || continue
+  ext=$(printf '%s' "${f##*.}" | tr '[:upper:]' '[:lower:]')
+  case "$ext" in jpg|jpeg|png|heic) fotos+=("$f") ;; esac
+done
+
+total=${#fotos[@]}
+if [ "$total" -eq 0 ]; then echo "No hay fotos en esta carpeta"; exit 1; fi
+echo "$total fotos a $fps fps = $(awk -v n="$total" -v f="$fps" 'BEGIN { printf "%.1f", n/f }') s de vídeo"
+
+# 2. Preparar cada foto como fotograma del mismo tamaño
+tmpdir=$(mktemp -d)
+vf="scale=$W:$H:force_original_aspect_ratio=decrease:force_divisible_by=2,pad=$W:$H:(ow-iw)/2:(oh-ih)/2,setsar=1"
+i=0; n=0
+
+for f in "${fotos[@]}"; do
+  i=$((i + 1))
+  ext=$(printf '%s' "${f##*.}" | tr '[:upper:]' '[:lower:]')
+  entrada="$f"
+
+  if [ "$ext" = heic ]; then
+    entrada="$tmpdir/heic.jpg"; rm -f "$entrada"
+    if command -v heif-convert >/dev/null; then heif-convert -q 100 "$f" "$entrada" >/dev/null </dev/null
+    elif command -v magick >/dev/null; then magick "$f" -quality 100 "$entrada" </dev/null
+    elif command -v sips >/dev/null; then sips -s format jpeg "$f" --out "$entrada" >/dev/null </dev/null
+    fi
+    [ -f "$entrada" ] || { echo; echo "Saltada (no se pudo convertir): $f"; continue; }
+  fi
+
+  n=$((n + 1))
+  frame="$tmpdir/frame_$(printf '%05d' "$n").jpg"
+  if ! ffmpeg -nostdin -y -loglevel error -i "$entrada" -vf "$vf" -q:v 2 "$frame"; then
+    echo; echo "Saltada (error): $f"; rm -f "$frame"; n=$((n - 1))
+  fi
+  printf '\rPreparando fotogramas: %d/%d' "$i" "$total"
+done
+echo
+
+# 3. Montar el vídeo
+ffmpeg -nostdin -y -loglevel error -stats -framerate "$fps" -start_number 1 \
+  -i "$tmpdir/frame_%05d.jpg" \
+  -c:v libx264 -crf 20 -preset medium -pix_fmt yuv420p -movflags +faststart \
+  "$salida"
+
+rm -rf "$tmpdir"
+echo "Listo: $salida"
+EOF
+```
+
 ### Updating Media Pools
 
 Only edit `mediaPool.videos` and `mediaPool.images` arrays in `route-config.js`. The system is fully dynamic — `media-controller.js` reads from these arrays at runtime. Add or remove as many as needed.
