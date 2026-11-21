@@ -290,9 +290,11 @@ The 20 tracks are distributed across 4 sections:
 
 Track count per section is fully dynamic — the system reads `section.audioFiles.length` at runtime.
 
-Optimizing Media for Web
-Videos (H.264, 1080p, no audio)
-bash
+````markdown
+### Optimizing Media for Web
+
+#### Videos (H.264, 1080p, no audio)
+```bash
 bash <<'EOF'
 dur_max=90   # duración máxima de cada trozo, en segundos
 
@@ -348,14 +350,15 @@ done
 
 echo "Listo: vídeos optimizados en la carpeta 'optimizados'"
 EOF
+```
 
 Key flags:
+- `-an`: strips audio (videos are muted in the app, saves bandwidth)
+- `-movflags +faststart`: enables progressive playback
+- `-crf 23`: quality/size balance (lower = better, 20–26 range)
 
--an: strips audio (videos are muted in the app, saves bandwidth)
--movflags +faststart: enables progressive playback
--crf 23: quality/size balance (lower = better, 20–26 range)
-Images (JPEG, 1920px width)
-bash
+#### Images (JPEG, 1920px width)
+```bash
 bash <<'EOF'
 # 1. Recoger las fotos (jpg, jpeg, png, heic; mayúsculas o minúsculas)
 fotos=()
@@ -405,6 +408,8 @@ done
 rm -rf "$tmpdir"
 echo "Listo: fotos optimizadas en la carpeta 'optimizadas'"
 EOF
+```
+````
 
 ### Stop Motion process for a folder of images
 
