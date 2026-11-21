@@ -293,18 +293,61 @@ Track count per section is fully dynamic — the system reads `section.audioFile
 ### Optimizing Media for Web
 
 #### Videos (H.264, 1080p, no audio)
-```bash
-# Single file
-ffmpeg -i input.mp4 -c:v libx264 -crf 23 -preset slow \
-  -vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2" \
-  -an -movflags +faststart output.mp4
+```bash <<'EOF'
+dur_max=90   # duración máxima de cada trozo, en segundos
 
-# Batch process folder
-for f in *.mp4; do
-  ffmpeg -i "$f" -c:v libx264 -crf 23 -preset slow \
-    -vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2" \
-    -an -movflags +faststart "opt_${f}"
+# 1. Recoger los vídeos (mp4, mov, m4v, mkv, avi, webm; mayúsculas o minúsculas)
+videos=()
+for f in *; do
+  [ -f "$f" ] || continue
+  case "$f" in opt_*|tmp_rename_*) continue ;; esac
+  ext=$(printf '%s' "${f##*.}" | tr '[:upper:]' '[:lower:]')
+  case "$ext" in mp4|mov|m4v|mkv|avi|webm) videos+=("$f") ;; esac
 done
+
+total=${#videos[@]}
+if [ "$total" -eq 0 ]; then echo "No hay vídeos en esta carpeta"; exit 1; fi
+ancho=${#total}; [ "$ancho" -lt 2 ] && ancho=2
+
+# 2. Renombrar a video_01, video_02... conservando la extensión
+i=0
+for f in "${videos[@]}"; do
+  i=$((i + 1))
+  ext=$(printf '%s' "${f##*.}" | tr '[:upper:]' '[:lower:]')
+  mv -- "$f" "$(printf 'tmp_rename_%0*d.%s' "$ancho" "$i" "$ext")"
+done
+for f in tmp_rename_*; do mv -- "$f" "video_${f#tmp_rename_}"; done
+echo "Renombrados $total vídeos"
+
+# 3. Optimizar (y trocear si pasan de $dur_max s) en la subcarpeta "optimizados"
+mkdir -p optimizados
+vf="scale=1920:1080:force_original_aspect_ratio=decrease:force_divisible_by=2,pad=1920:1080:(ow-iw)/2:(oh-ih)/2"
+
+for f in video_*; do
+  ext="${f##*.}"
+  case "$ext" in mp4|mov|m4v|mkv|avi|webm) ;; *) continue ;; esac
+  base="${f%.*}"
+  dur=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$f" </dev/null)
+  echo "== $f (${dur%.*} s)"
+
+  if awk -v d="$dur" -v m="$dur_max" 'BEGIN { exit !(d > m) }'; then
+    # Largo: un solo encode, cortado en trozos exactos de $dur_max s
+    ffmpeg -nostdin -y -loglevel error -stats -i "$f" \
+      -c:v libx264 -crf 23 -preset slow -pix_fmt yuv420p -vf "$vf" -an \
+      -force_key_frames "expr:gte(t,n_forced*$dur_max)" \
+      -f segment -segment_time "$dur_max" -reset_timestamps 1 -segment_start_number 1 \
+      -segment_format_options movflags=+faststart \
+      "optimizados/${base}_parte%02d.mp4"
+  else
+    # Corto: un solo archivo
+    ffmpeg -nostdin -y -loglevel error -stats -i "$f" \
+      -c:v libx264 -crf 23 -preset slow -pix_fmt yuv420p -vf "$vf" -an \
+      -movflags +faststart "optimizados/${base}.mp4"
+  fi
+done
+
+echo "Listo: vídeos optimizados en la carpeta 'optimizados'"
+EOF
 ```
 
 Key flags:
