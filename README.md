@@ -293,7 +293,7 @@ Track count per section is fully dynamic — the system reads `section.audioFile
 ### Optimizing Media for Web
 
 #### Videos (H.264, 1080p, no audio)
-bash <<'EOF'
+```bash <<'EOF'
 command -v ffmpeg >/dev/null || { echo "Falta ffmpeg. Instálalo con: brew install ffmpeg"; exit 1; }
 
 # 1. Recoger las fotos en orden alfabético (jpg, jpeg, png, heic)
