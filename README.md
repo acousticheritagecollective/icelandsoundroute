@@ -409,7 +409,8 @@ EOF
 
 ### Stop Motion process for a folder of images
 
-```bash <<'EOF'
+```bash
+bash <<'EOF'
 fps=10                 # fotos por segundo
 W=1920; H=1080         # tamaño del vídeo
 salida="stopmotion_$(basename "$PWD").mp4"
@@ -464,7 +465,6 @@ rm -rf "$tmpdir"
 echo "Listo: $salida"
 EOF
 ```
-
 ### Updating Media Pools
 
 Only edit `mediaPool.videos` and `mediaPool.images` arrays in `route-config.js`. The system is fully dynamic — `media-controller.js` reads from these arrays at runtime. Add or remove as many as needed.
