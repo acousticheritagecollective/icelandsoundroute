@@ -291,9 +291,57 @@ The 20 tracks are distributed across 4 sections:
 Track count per section is fully dynamic — the system reads `section.audioFiles.length` at runtime.
 
 ### Optimizing Media for Web
+Fotos
+```bash
+bash <<'EOF'
+command -v ffmpeg >/dev/null || { echo "Falta ffmpeg. Instálalo con: brew install ffmpeg"; exit 1; }
 
-#### Videos (H.264, 1080p, no audio)
-```bash <<'EOF'
+# 1. Recoger las fotos en orden alfabético (jpg, jpeg, png, heic)
+fotos=()
+for f in *; do
+  [ -f "$f" ] || continue
+  ext=$(printf '%s' "${f##*.}" | tr '[:upper:]' '[:lower:]')
+  case "$ext" in jpg|jpeg|png|heic) fotos+=("$f") ;; esac
+done
+
+total=${#fotos[@]}
+if [ "$total" -eq 0 ]; then echo "No hay fotos en esta carpeta"; exit 1; fi
+
+# 2. Optimizar y guardar numeradas en "optimizadas" (los originales no se tocan)
+mkdir -p optimizadas
+tmpdir=$(mktemp -d)
+n=0
+
+for f in "${fotos[@]}"; do
+  ext=$(printf '%s' "${f##*.}" | tr '[:upper:]' '[:lower:]')
+  entrada="$f"
+
+  if [ "$ext" = heic ]; then
+    entrada="$tmpdir/heic.jpg"; rm -f "$entrada"
+    if command -v heif-convert >/dev/null; then heif-convert -q 100 "$f" "$entrada" >/dev/null </dev/null
+    elif command -v magick >/dev/null; then magick "$f" -quality 100 "$entrada" </dev/null
+    elif command -v sips >/dev/null; then sips -s format jpeg "$f" --out "$entrada" >/dev/null </dev/null
+    fi
+    [ -f "$entrada" ] || { echo "Saltada (no se pudo convertir): $f"; continue; }
+  fi
+
+  nuevo=$(printf 'image_%02d.jpg' $((n + 1)))
+  if ffmpeg -nostdin -y -loglevel error -i "$entrada" -vf "scale=1920:-1" -q:v 3 "optimizadas/$nuevo"; then
+    n=$((n + 1))
+    echo "$f  ->  optimizadas/$nuevo"
+  else
+    echo "Saltada (error): $f"; rm -f "optimizadas/$nuevo"
+  fi
+done
+
+rm -rf "$tmpdir"
+echo "Listo: $n fotos en 'optimizadas' (originales sin tocar)"
+EOF
+```
+
+Vídeos
+```bash
+bash <<'EOF'
 command -v ffmpeg >/dev/null || { echo "Falta ffmpeg. Instálalo con: brew install ffmpeg"; exit 1; }
 dur_max=90   # duración máxima de cada trozo, en segundos
 
