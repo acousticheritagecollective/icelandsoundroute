@@ -290,7 +290,6 @@ The 20 tracks are distributed across 4 sections:
 
 Track count per section is fully dynamic — the system reads `section.audioFiles.length` at runtime.
 
-````markdown
 ### Optimizing Media for Web
 
 #### Videos (H.264, 1080p, no audio)
@@ -409,7 +408,6 @@ rm -rf "$tmpdir"
 echo "Listo: fotos optimizadas en la carpeta 'optimizadas'"
 EOF
 ```
-````
 
 ### Stop Motion process for a folder of images
 
