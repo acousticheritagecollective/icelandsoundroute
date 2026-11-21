@@ -295,47 +295,47 @@ Track count per section is fully dynamic — the system reads `section.audioFile
 #### Videos (H.264, 1080p, no audio)
 ```bash <<'EOF'
 command -v ffmpeg >/dev/null || { echo "Falta ffmpeg. Instálalo con: brew install ffmpeg"; exit 1; }
+dur_max=90   # duración máxima de cada trozo, en segundos
 
-# 1. Recoger las fotos en orden alfabético (jpg, jpeg, png, heic)
-fotos=()
+# 1. Recoger los vídeos en orden alfabético (mp4, mov, m4v, mkv, avi, webm)
+videos=()
 for f in *; do
   [ -f "$f" ] || continue
   ext=$(printf '%s' "${f##*.}" | tr '[:upper:]' '[:lower:]')
-  case "$ext" in jpg|jpeg|png|heic) fotos+=("$f") ;; esac
+  case "$ext" in mp4|mov|m4v|mkv|avi|webm) videos+=("$f") ;; esac
 done
 
-total=${#fotos[@]}
-if [ "$total" -eq 0 ]; then echo "No hay fotos en esta carpeta"; exit 1; fi
+total=${#videos[@]}
+if [ "$total" -eq 0 ]; then echo "No hay vídeos en esta carpeta"; exit 1; fi
 
-# 2. Optimizar y guardar numeradas en "optimizadas" (los originales no se tocan)
-mkdir -p optimizadas
+# 2. Optimizar y trocear; todas las partes se numeran seguidas en "optimizados"
+mkdir -p optimizados
 tmpdir=$(mktemp -d)
+vf="scale=1920:1080:force_original_aspect_ratio=decrease:force_divisible_by=2,pad=1920:1080:(ow-iw)/2:(oh-ih)/2"
 n=0
 
-for f in "${fotos[@]}"; do
-  ext=$(printf '%s' "${f##*.}" | tr '[:upper:]' '[:lower:]')
-  entrada="$f"
+for f in "${videos[@]}"; do
+  echo "== $f"
+  rm -f "$tmpdir"/parte_*.mp4
 
-  if [ "$ext" = heic ]; then
-    entrada="$tmpdir/heic.jpg"; rm -f "$entrada"
-    if command -v heif-convert >/dev/null; then heif-convert -q 100 "$f" "$entrada" >/dev/null </dev/null
-    elif command -v magick >/dev/null; then magick "$f" -quality 100 "$entrada" </dev/null
-    elif command -v sips >/dev/null; then sips -s format jpeg "$f" --out "$entrada" >/dev/null </dev/null
-    fi
-    [ -f "$entrada" ] || { echo "Saltada (no se pudo convertir): $f"; continue; }
-  fi
+  ffmpeg -nostdin -y -loglevel error -stats -i "$f" \
+    -c:v libx264 -crf 23 -preset slow -pix_fmt yuv420p -vf "$vf" -an \
+    -force_key_frames "expr:gte(t,n_forced*$dur_max)" \
+    -f segment -segment_time "$dur_max" -reset_timestamps 1 \
+    -segment_format_options movflags=+faststart \
+    "$tmpdir/parte_%03d.mp4" || { echo "Error procesando $f"; continue; }
 
-  nuevo=$(printf 'image_%02d.jpg' $((n + 1)))
-  if ffmpeg -nostdin -y -loglevel error -i "$entrada" -vf "scale=1920:-1" -q:v 3 "optimizadas/$nuevo"; then
+  for p in "$tmpdir"/parte_*.mp4; do
+    [ -f "$p" ] || continue
     n=$((n + 1))
-    echo "$f  ->  optimizadas/$nuevo"
-  else
-    echo "Saltada (error): $f"; rm -f "optimizadas/$nuevo"
-  fi
+    nuevo=$(printf 'video_%02d.mp4' "$n")
+    mv -- "$p" "optimizados/$nuevo"
+    echo "   -> optimizados/$nuevo"
+  done
 done
 
 rm -rf "$tmpdir"
-echo "Listo: $n fotos en 'optimizadas' (originales sin tocar)"
+echo "Listo: $n vídeos en 'optimizados' (originales sin tocar)"
 EOF
 ```
 
